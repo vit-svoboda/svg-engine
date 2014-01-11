@@ -1,0 +1,5 @@
+Sort tiles so they have correct default z-index.
+
+Change the server API so I can get updates on any subset of tiles.
+
+Swap the coordinate priority so the whole lot of the screen is filled with tiles.
