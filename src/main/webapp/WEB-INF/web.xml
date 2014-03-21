@@ -4,14 +4,14 @@
 	 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	 xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd"
 	 version="3.1">
-    <servlet>
+    <!-- <servlet>
         <servlet-name>Server</servlet-name>
         <servlet-class>cz.muni.fi.xsvobo42.svg.engine.Server</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>Server</servlet-name>
         <url-pattern>/Server</url-pattern>
-    </servlet-mapping>
+    </servlet-mapping> -->
     <welcome-file-list>
         <welcome-file>index.html</welcome-file>
     </welcome-file-list>
