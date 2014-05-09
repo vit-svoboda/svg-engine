@@ -1,5 +1,6 @@
 /*
  *  Object definitions - later on most likely replaced with svg.js
+ *  TODO: transform this to svg.js module.
  */
 function Point(x, y) {
     this.x = x;

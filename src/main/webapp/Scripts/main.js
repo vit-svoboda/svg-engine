@@ -2,7 +2,7 @@ require.config({
     baseUrl: 'Scripts',
     paths: {
         jquery: 'third-party/jquery',
-        SVG: 'svg'
+        svg: 'third-party/svg'
     }
 });
 require(['client'], function(module) {

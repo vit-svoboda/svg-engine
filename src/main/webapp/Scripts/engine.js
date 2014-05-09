@@ -1,10 +1,20 @@
-define(['jquery', 'elements'], function($) {
+define(['jquery', 'svg', 'elements'], function($, SVG) {
     'use strict';
-    
+
     function Engine(container, controller, refreshSpeed) {
-        this.refreshSpeed = refreshSpeed || 1000;
-        this.container = container;
-        this.controller = controller;
+        // Make sure container is jQuery object.
+        container = $(container);
+
+        if (SVG.supported) {
+            this.refreshSpeed = refreshSpeed || 1000;
+            this.context = SVG(container[0]).size(container.width(), container.height());
+            this.controller = controller;
+        } else {
+            // If SVG is not supported, disable engine run.
+            this.run = function() {
+                container.append('<span>SVG is not supported in this browser.</span>');
+            };
+        }
     }
     Engine.prototype.redraw = function(data) {
         var dimX = data.tiles.length;
@@ -12,24 +22,23 @@ define(['jquery', 'elements'], function($) {
 
         console.log('Redrawing to grid of size ' + dimX + 'x' + dimY + '.');
 
-        // Clear SVG from previous render. Perhaps standard loop through childElements was faster.
-        $('#svg > polygon').remove();
-        $('#svg > image').remove();
+        // Clear SVG from previous render.
+        // TODO: Remove only the elements to be redrawn or reclycle them.
+        this.context.clear();
 
-        var box = this.container[0].getBBox();
-        var width = box.width / dimX;
-        var height = box.height / dimY;
+        var viewportWidth = this.context.width();
+        var width = viewportWidth / dimX;
+        var height = this.context.height() / dimY;
 
-        var halfScreenWidth = box.width / 2;
+        var halfScreenWidth = viewportWidth / 2;
 
         for (var x = 0; x < dimX; x++) {
             for (var y = 0; y < dimY; y++) {
-                var tileData = {
-                    'content': data.tiles[x][y],
-                    'width': width,
-                    'height': height
-                };
-                var tile = this.controller.getTile(tileData);
+
+                var tileData = {'width': width, 'height': height};
+                $.extend(tileData, data.tiles[x][y]);
+                
+                var tile = this.controller.getTile(this.context, tileData);
 
                 // Information that general engine needs to track about every tile.			
                 tile.coordinates = new Point(x, y);
@@ -37,9 +46,7 @@ define(['jquery', 'elements'], function($) {
                 // Position new element when it's finished;
                 tile.center = new Point((x - y) * (width / 2) + halfScreenWidth, (x + y + 1) * (height / 2));
 
-                tile.place(tile.center);
-
-                this.container.append(tile.svg);
+                tile.move(tile.center.x, tile.center.y);
             }
         }
     };
@@ -56,7 +63,7 @@ define(['jquery', 'elements'], function($) {
         })(this);
 
         try {
-            xmlHttp.open("GET", this.controller.serverUrl + '/tiles/0,0,100,100', true);
+            xmlHttp.open("GET", this.controller.serverUrl + '/tiles/0,0,50,50', true);
             xmlHttp.setRequestHeader('Content-type', 'application/json');
             xmlHttp.send();
         }

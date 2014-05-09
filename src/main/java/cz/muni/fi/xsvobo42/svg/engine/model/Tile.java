@@ -12,7 +12,7 @@ public class Tile {
     private static final Random RNG = new Random();
     
     private Point position;
-    private String data;
+    private String content;
 
     public Tile() {
     }
@@ -46,8 +46,8 @@ public class Tile {
      *
      * @return data describing of the tile content.
      */
-    public String getData() {
-        return data;
+    public String getContent() {
+        return content;
     }
 
     /**
@@ -55,11 +55,11 @@ public class Tile {
      *
      * @param data tile content description.
      */
-    private void setData(String data) {
-        this.data = data;
+    private void setContent(String content) {
+        this.content = content;
     }
 
     public void updateData() {
-        setData(Integer.toString(RNG.nextInt(2)));
+        setContent(Integer.toString(RNG.nextInt(2)));
     }
 }
