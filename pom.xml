@@ -4,6 +4,7 @@
 
     <groupId>cz.muni.fi.xsvobo42</groupId>
     <artifactId>svg-engine</artifactId>
+    
     <version>1.0-SNAPSHOT</version>
     <packaging>war</packaging>
 
@@ -13,21 +14,55 @@
         <endorsed.dir>${project.build.directory}/endorsed</endorsed.dir>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
-    
+            
+    <repositories>
+        <repository>
+            <id>jboss</id>
+            <name>jboss repo</name>
+            <url>http://repository.jboss.org/maven2</url>
+        </repository>
+    </repositories>
+            
     <dependencies>
+         <!-- RESTEasy core library -->        
         <dependency>
-            <groupId>com.google.code.gson</groupId>
-            <artifactId>gson</artifactId>
-            <version>2.2.4</version>
+            <groupId>org.jboss.resteasy</groupId>
+            <artifactId>resteasy-jaxrs</artifactId>
+            <version>3.0.8.Final</version>
+            <!-- filter out unwanted jars -->
+            <exclusions>
+                <exclusion>
+                    <groupId>commons-httpclient</groupId>
+                    <artifactId>commons-httpclient</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>tjws</groupId>
+                    <artifactId>webserver</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>javax.servlet</groupId>
+                    <artifactId>servlet-api</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.10</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.resteasy</groupId>
+            <artifactId>resteasy-jackson-provider</artifactId>
+            <version>3.0.8.Final</version>
         </dependency>
         <dependency>
             <groupId>javax</groupId>
             <artifactId>javaee-web-api</artifactId>
             <version>7.0</version>
-            <scope>provided</scope>
+            <type>jar</type>
         </dependency>
     </dependencies>
-
     <build>
         <plugins>
             <plugin>
@@ -77,5 +112,4 @@
             </plugin>
         </plugins>
     </build>
-
 </project>

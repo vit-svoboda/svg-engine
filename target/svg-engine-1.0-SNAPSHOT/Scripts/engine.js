@@ -1,14 +1,15 @@
 define(['jquery', 'elements'], function($) {
     'use strict';
     
-    function Engine(container, controller, refreshSpeed) {
+    function Engine(container, controller, serverUrl, refreshSpeed) {
         this.refreshSpeed = refreshSpeed || 1000;
         this.container = container;
         this.controller = controller;
+        this.serverUrl = serverUrl;
     }
     Engine.prototype.redraw = function(data) {
-        var dimX = data.tiles.length;
-        var dimY = data.tiles[0].length;
+        var dimX = data.map.length;
+        var dimY = data.map[0].length;
 
         console.log('Redrawing to grid of size ' + dimX + 'x' + dimY + '.');
 
@@ -25,7 +26,7 @@ define(['jquery', 'elements'], function($) {
         for (var x = 0; x < dimX; x++) {
             for (var y = 0; y < dimY; y++) {
                 var tileData = {
-                    'content': data.tiles[x][y],
+                    'content': data.map[x][y],
                     'width': width,
                     'height': height
                 };
@@ -56,7 +57,7 @@ define(['jquery', 'elements'], function($) {
         })(this);
 
         try {
-            xmlHttp.open("GET", this.controller.serverUrl + '/tiles/0,0,100,100', true);
+            xmlHttp.open("GET", this.serverUrl, true);
             xmlHttp.setRequestHeader('Content-type', 'application/json');
             xmlHttp.send();
         }

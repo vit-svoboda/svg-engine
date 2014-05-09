@@ -1,0 +1,25 @@
+/* HTML styles */
+.Fill {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    position: absolute;
+}
+
+.Header {
+    position: relative;
+}
+
+/* SVG styles */
+.Flag {
+    fill: blue;
+    stroke: red;
+    stroke-width: 2px;
+}
+
+.Tile {
+    fill: green;
+    stroke: black;
+    stroke-width: 1px;
+}

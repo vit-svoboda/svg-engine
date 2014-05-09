@@ -6,7 +6,7 @@ define(['engine', 'jquery', 'elements'], function(Engine, $) {
             var container = $('#svg');
 
             var controller = {
-                'serverUrl': 'data',
+                'serverUrl': 'Server',
                 'getTile': function(data) {
                     var tile = (data.content % 2)
                             ? new Sprite(data.width, data.height, 'Images/grass.png')
@@ -35,7 +35,7 @@ define(['engine', 'jquery', 'elements'], function(Engine, $) {
                 }
             };
 
-            var engine = new Engine(container, controller);
+            var engine = new Engine(container, controller, 'Server');
             engine.run();
         });
     };
