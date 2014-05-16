@@ -41,10 +41,16 @@ define(['jquery', 'svg', 'svg.tile'], function($, SVG) {
                 var tile = this.controller.getTile(this.context, tileData);
 
                 // Information that general engine needs to track about every tile.			
-                tile.coordinates = new Point(x, y);
+                tile.coordinates = {
+                    'x': x,
+                    'y': y
+                };
 
                 // Position new element when it's finished;
-                tile.center = new Point((x - y) * (width / 2) + halfScreenWidth, (x + y + 1) * (height / 2));
+                tile.center = {
+                    'x': (x - y) * (width / 2) + halfScreenWidth,
+                    'y': (x + y + 1) * (height / 2)
+                };
 
                 tile.move(tile.center.x, tile.center.y);
             }

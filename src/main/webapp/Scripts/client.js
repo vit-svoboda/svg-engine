@@ -1,4 +1,4 @@
-define(['engine', 'jquery', 'elements'], function(Engine, $) {
+define(['engine', 'jquery'], function(Engine, $) {
     'use strict';
 
     function Client() {
