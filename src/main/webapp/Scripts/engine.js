@@ -17,42 +17,29 @@ define(['jquery', 'svg', 'svg.tile'], function($, SVG) {
         }
     }
     Engine.prototype.redraw = function(data) {
-        var dimX = data.tiles.length;
-        var dimY = data.tiles[0].length;
+        var dimension = {
+            x: data.tiles.length,
+            y: data.tiles[0].length
+        };
 
-        console.log('Redrawing to grid of size ' + dimX + 'x' + dimY + '.');
+        console.log('Redrawing to grid of size ' + dimension.x + 'x' + dimension.y + '.');
 
         // Clear SVG from previous render.
         // TODO: Remove only the elements to be redrawn or reclycle them.
         this.context.clear();
 
-        var viewportWidth = this.context.width();
-        var width = viewportWidth / dimX;
-        var height = this.context.height() / dimY;
+        var tileSize = {
+            width: this.context.width() / dimension.x,
+            height: this.context.height() / dimension.y
+        };
 
-        var halfScreenWidth = viewportWidth / 2;
+        for (var x = 0; x < dimension.x; x++) {
+            for (var y = 0; y < dimension.y; y++) {
+                var tileData = $.extend(data.tiles[x][y], tileSize),
+                    tile = this.controller.createTile(this.context, tileData);
 
-        for (var x = 0; x < dimX; x++) {
-            for (var y = 0; y < dimY; y++) {
-
-                var tileData = {'width': width, 'height': height};
-                $.extend(tileData, data.tiles[x][y]);
-                
-                var tile = this.controller.getTile(this.context, tileData);
-
-                // Information that general engine needs to track about every tile.			
-                tile.coordinates = {
-                    'x': x,
-                    'y': y
-                };
-
-                // Position new element when it's finished;
-                tile.center = {
-                    'x': (x - y) * (width / 2) + halfScreenWidth,
-                    'y': (x + y + 1) * (height / 2)
-                };
-
-                tile.move(tile.center.x, tile.center.y);
+                // Add user controls handlers.
+                tile.click(this.onClick);
             }
         }
     };

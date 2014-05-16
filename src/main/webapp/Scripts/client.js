@@ -5,16 +5,11 @@ define(['engine', 'jquery'], function(Engine, $) {
         $(document).ready(function() {
             var controller = {
                 serverUrl: 'data',
-                getTile: function(context, data) {
+                createTile: function(context, data) {
                     
-                    var tile = (data.content == 1)
-                            ? context.image('Images/grass.png', data.width, data.height)
-                            // TODO: Create svg.js module wrapping tile creation.
-                            : context.polygon().tile(data.width, data.height).attr('class', 'Tile');
+                    var tile = (data.content == 1) ? context.image('Images/grass.png') : context.polygon().attr('class', 'Tile');
 
-                    tile.click(this.onClick);
-
-                    return tile;
+                    return tile.tile(data);
                 },
                 onClick: function(e) {
                     var tile = e.originalTarget.instance;
