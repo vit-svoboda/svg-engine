@@ -1,4 +1,4 @@
-define(['jquery', 'svg', 'elements'], function($, SVG) {
+define(['jquery', 'svg', 'svg.tile'], function($, SVG) {
     'use strict';
 
     function Engine(container, controller, refreshSpeed) {

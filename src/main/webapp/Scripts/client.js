@@ -10,7 +10,7 @@ define(['engine', 'jquery', 'elements'], function(Engine, $) {
                     var tile = (data.content == 1)
                             ? context.image('Images/grass.png', data.width, data.height)
                             // TODO: Create svg.js module wrapping tile creation.
-                            : context.polygon(new Tile(data.width, data.height).points.join(' ')).attr('class', 'Tile');
+                            : context.polygon().tile(data.width, data.height).attr('class', 'Tile');
 
                     tile.click(this.onClick);
 
