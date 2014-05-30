@@ -5,11 +5,17 @@ define(['engine', 'jquery'], function(Engine, $) {
         $(document).ready(function() {
             var controller = {
                 serverUrl: 'data',
-                createTile: function(context, data) {
-                    
-                    var tile = (data.content == 1) ? context.image('Images/grass.png') : context.polygon().attr('class', 'Tile');
-
-                    return tile.tile(data);
+                createTile: function(context, content) {   
+                    switch(content) {
+                        case 1:
+                            return context.image('Images/grass.png');
+                         
+                        case 2:
+                            return context.image('Images/sand.png');
+                            
+                        default:
+                            return context.polygon().attr('class', 'Tile');
+                    }
                 },
                 onClick: function(e) {
                     var tile = e.originalTarget.instance;
@@ -24,7 +30,8 @@ define(['engine', 'jquery'], function(Engine, $) {
                         $(e.originalTarget).remove();
                     });
                     
-                    // TODO: actually on mouse down place there some temporary item, on mouse up make it permanent and meanwhile ask server whether it can be there and if so, notify it,
+                    // TODO: Actually on mouse down place there some temporary item, on mouse up make it permanent.
+                    // TODO: Meanwhile ask server whether it can be there and if so, notify it.
                 }
             };
 
