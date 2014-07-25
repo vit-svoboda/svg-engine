@@ -1,5 +1,6 @@
-define(['jquery', 'point', 'datacache', 'svg', 'svg.tile'], function($, Point, DataCache, SVG) {
+define(['jquery', 'point', 'datacache', 'camera', 'svg', 'svg.tile'], function($, Point, DataCache, Camera, SVG) {
     'use strict';
+
 
     /**
      * Engine module constructor.
@@ -12,21 +13,15 @@ define(['jquery', 'point', 'datacache', 'svg', 'svg.tile'], function($, Point, D
         // Make sure container is jQuery object.
         container = $(container);
 
-        if (SVG.supported) {
+        if (SVG.supported) {          
             this.refreshSpeed = refreshSpeed || 200;
-            this.context = SVG(container[0]).size(container.innerWidth(), container.innerHeight());
+            
+            this.context = SVG(container[0]);     
             this.controller = controller;
-            this.camera = {
-                // In data coordinates
-                position: {
-                    x: 35.1,
-                    y: 16.2
-                },
-                zoom: 1.0
-            },
-            // TODO: default tile size should be responsibility of the controller providing sprites.
-            this.BASE_TILE_SIZE = 100;
+            this.camera = new Camera(new Point(35.1, 16.7)),
             this.cache = new DataCache();
+    
+            this.resize(container);
         } else {
             // If SVG is not supported, disable engine run.
             this.run = function() {
@@ -45,10 +40,11 @@ define(['jquery', 'point', 'datacache', 'svg', 'svg.tile'], function($, Point, D
 
         console.log('Redrawing to grid of size ' + dimension.x + 'x' + dimension.y + '.');
 
-        var tileSize = this.getTileSize(),
-            aspectRatio = this.context.width() / (this.context.height() * 2),
+        var tileSize = this.camera.getTileSize(),
+            screenSize = this.camera.screenSize,
+            offset = this.camera.isometricOffset,
             skippedTiles = 0;
-
+        
         for (var x = 0; x < dimension.x; x++) {
             for (var y = 0; y < dimension.y; y++) {
 
@@ -61,13 +57,12 @@ define(['jquery', 'point', 'datacache', 'svg', 'svg.tile'], function($, Point, D
                 if (!oldTile || oldTile.content !== tileContent) {
 
                     // TODO: Hide this ugly piece of code in a function
-                    var center = new Point(Math.round(((x - y) * tileSize.width + this.context.width()) / 2),
-                                           Math.round(((x + y - 1) * tileSize.height - this.context.height() * aspectRatio) / 2 )),
-                        tile = null;
+                    var center = new Point(Math.round(((x - y) * tileSize.width + offset.x) / 2),
+                                           Math.round(((x + y - 1) * tileSize.height - offset.y) / 2));
 
                     // Skip tiles that would end up out of the screen
                     // TODO: Configure the boundaries properly
-                    if (center.x < -tileSize.width || center.y < -tileSize.height || center.x > this.context.width() || center.y > this.context.height()) {
+                    if (center.x < -tileSize.width || center.y < -tileSize.height || center.x > screenSize.x || center.y > screenSize.y) {
                         skippedTiles++;
                     } else {
                         // Remove the original tile
@@ -76,7 +71,7 @@ define(['jquery', 'point', 'datacache', 'svg', 'svg.tile'], function($, Point, D
                         }
 
                         // Draw the actual tile
-                        tile = this.controller.createTile(this.context, tileContent);
+                        var tile = this.controller.createTile(this.context, tileContent);
 
                         tile.tile(tileSize);
                         // TODO: Move back to tile method if possible.
@@ -84,8 +79,7 @@ define(['jquery', 'point', 'datacache', 'svg', 'svg.tile'], function($, Point, D
                         tile.center = center;
 
                         // Add user controls handlers.
-                        tile.click(this.controller.onClick);
-                        
+                        tile.click(this.controller.onClick);                        
                         tile.move(center.x, center.y);
                         
                         // TODO: Reorder all tiles infront of this one on the z-index
@@ -117,14 +111,7 @@ define(['jquery', 'point', 'datacache', 'svg', 'svg.tile'], function($, Point, D
 
         try {
             // Request data surrounding the current camera position
-            var center = this.camera.position,
-                    tileSize = this.getTileSize(),
-                    // TODO: The more asymetric aspect ratio, the more data will be wasted since the corners end up outside of the view.
-                    halfResolution = Math.max(this.context.width() / tileSize.width, this.context.height() / tileSize.height),
-                    screen = [
-                        new Point(Math.floor(center.x - halfResolution), Math.floor(center.y - halfResolution)),
-                        new Point(Math.ceil(center.x + halfResolution), Math.ceil(center.y + halfResolution))
-                    ];
+            var screen = this.camera.getScreenOuterBounds();
 
             xmlHttp.open('GET', this.controller.serverUrl + '/tiles/' + screen.join(), true);
             xmlHttp.setRequestHeader('Content-type', 'application/json');
@@ -145,14 +132,14 @@ define(['jquery', 'point', 'datacache', 'svg', 'svg.tile'], function($, Point, D
             };
         })(this), this.refreshSpeed);
     };
-
-
-    Engine.prototype.getTileSize = function() {
-        var actualSize = this.BASE_TILE_SIZE * this.camera.zoom;
-        return {
-            width: actualSize,
-            height: actualSize / 2
-        };
+    
+    
+    Engine.prototype.resize = function(container) {
+        var c = $(container),
+            size = new Point(c.innerWidth(), c.innerHeight());
+        
+        this.camera.resizeViewport(size);
+        this.context.size(size.x, size.y);
     };
 
     return Engine;
