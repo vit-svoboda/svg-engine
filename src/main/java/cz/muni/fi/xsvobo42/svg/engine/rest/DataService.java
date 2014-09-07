@@ -16,8 +16,7 @@ import javax.ws.rs.core.MediaType;
  * @author vit
  */
 @Path("/tiles")
-public class DataService {
-
+public class DataService {   
     /**
      * Gets information about tile on coordinates x:y and returns it serialized
      * in JSON.

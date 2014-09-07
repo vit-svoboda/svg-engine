@@ -19,6 +19,8 @@ define(['point'], function(Point){
     };
     
     Camera.prototype.getScreenOuterBounds = function() {
+        
+        // TODO: cache the result
         var tileSize = this.getTileSize(),
             halfResolution = Math.max(this.screenSize.x / tileSize.width, this.screenSize.y / tileSize.height),
             // TODO: working with top left corner would make windows resizing easier.
@@ -47,6 +49,23 @@ define(['point'], function(Point){
             var aspectRatio = size.x / (size.y * 2);
             this.isometricOffset = new Point(size.x, size.y * aspectRatio);
         }
+    };
+    
+    Camera.prototype.getIsometricCoordinates = function(x, y) {
+        var tileSize = this.getTileSize(),
+            isoCoordinates = new Point(Math.round(((x - y) * tileSize.width + this.isometricOffset.x) / 2),
+                                       Math.round(((x + y - 1) * tileSize.height - this.isometricOffset.y) / 2));
+                                       
+        return isoCoordinates;
+    };
+    
+    
+    Camera.prototype.showTile = function(tileIsoCenter) {
+        var ts = this.getTileSize(),
+            ss = this.screenSize;
+        
+        // TODO: Configure the boundaries properly
+        return tileIsoCenter.x > -ts.width && tileIsoCenter.y > -ts.height && tileIsoCenter.x < ss.x && tileIsoCenter.y < ss.y
     };
     
     return Camera;

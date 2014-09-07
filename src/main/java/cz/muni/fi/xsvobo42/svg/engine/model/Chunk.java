@@ -49,12 +49,19 @@ public class Chunk {
 
     public void updateTiles() {
         // TODO: Replace with single query
+        int changed = 0;
+        
         for (int x = 0; x < height; x++) {
             List<Tile> row = tiles.get(x);
             
             for (int y = 0; y < width; y++) {
                 Tile tile = new Tile(new Point(x, y));
-                tile.updateData();
+                
+                if(changed < 100) {
+                    if(tile.updateData()){
+                        changed++;
+                    }
+                }
 
                 row.add(tile);
             }

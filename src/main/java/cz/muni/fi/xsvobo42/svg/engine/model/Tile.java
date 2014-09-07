@@ -1,5 +1,6 @@
 package cz.muni.fi.xsvobo42.svg.engine.model;
 
+import java.util.HashMap;
 import java.util.Random;
 
 /**
@@ -10,6 +11,7 @@ import java.util.Random;
 public class Tile {
 
     private static final Random RNG = new Random();
+    private static HashMap<Point, Integer> serverCache = new HashMap<>();
     
     private Point position;
     private int content;
@@ -47,6 +49,12 @@ public class Tile {
      * @return data describing of the tile content.
      */
     public int getContent() {
+        Integer data = serverCache.get(position);
+        if(data == null){
+            data = RNG.nextInt(3);
+        }
+        setContent(data);
+        
         return content;
     }
 
@@ -57,9 +65,16 @@ public class Tile {
      */
     private void setContent(int content) {
         this.content = content;
+        serverCache.put(position, content);
     }
 
-    public void updateData() {
-        setContent(RNG.nextInt(3));
+    public boolean updateData() {
+        if(RNG.nextBoolean() && RNG.nextBoolean() && RNG.nextBoolean() && RNG.nextBoolean()) {
+            setContent((getContent() + 1) % 3);
+            
+            return true;
+        }
+        
+        return false;
     }
 }

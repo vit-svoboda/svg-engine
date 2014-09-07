@@ -32,6 +32,33 @@ define(['engine', 'jquery'], function(Engine, $) {
                     
                     // TODO: Actually on mouse down place there some temporary item, on mouse up make it permanent.
                     // TODO: Meanwhile ask server whether it can be there and if so, notify it.
+                },
+                createUi: function(context) {
+                    var ui = context.foreignObject(150,600),
+                        speed = 100,
+                        toolbar = $('<div style="background-color:blue;padding:30px"></div>'),
+                        up = $('<button type="button">UP</button>').click(function(e) {
+                            console.log('Going up!');
+                            engine.move(0, speed);
+                        }),
+                        down = $('<button type="button">DOWN</button>').click(function(e) {
+                            console.log('Going down!');
+                            engine.move(0, -speed);
+                        }),
+                        left = $('<button type="button">LEFT</button>').click(function(e) {
+                            console.log('Damn commies!');
+                            engine.move(speed, 0);
+                        }),
+                        right = $('<button type="button">RIGHT</button>').click(function(e) {
+                            console.log('Right away!');
+                            engine.move(-speed, 0);
+                        });                
+                    $(ui.node).append(toolbar);
+                    toolbar.append(up, down, left, right);
+                    
+                    ui.move(context.width() - ui.width() - 30, 30);
+                    
+                    return [ ui ];
                 }
             };
 

@@ -1,6 +1,5 @@
-define(['jquery', 'point', 'datacache', 'camera', 'svg', 'svg.tile'], function($, Point, DataCache, Camera, SVG) {
+define(['jquery', 'point', 'datacache', 'camera', 'svg', 'svg.tile', 'svg.foreignobject'], function($, Point, DataCache, Camera, SVG) {
     'use strict';
-
 
     /**
      * Engine module constructor.
@@ -13,14 +12,19 @@ define(['jquery', 'point', 'datacache', 'camera', 'svg', 'svg.tile'], function($
         // Make sure container is jQuery object.
         container = $(container);
 
-        if (SVG.supported) {          
+        if (SVG.supported) {
             this.refreshSpeed = refreshSpeed || 200;
-            
-            this.context = SVG(container[0]);     
+
+            this.context = SVG(container[0]);
             this.controller = controller;
-            this.camera = new Camera(new Point(35.1, 16.7)),
+            
+            // Information about logical field of view.
+            this.camera = new Camera(new Point(35.1, 16.7));
             this.cache = new DataCache();
-    
+            
+            // Information about actually drawn field of view.
+            this.tiles = this.context.group();
+
             this.resize(container);
         } else {
             // If SVG is not supported, disable engine run.
@@ -40,38 +44,30 @@ define(['jquery', 'point', 'datacache', 'camera', 'svg', 'svg.tile'], function($
 
         console.log('Redrawing to grid of size ' + dimension.x + 'x' + dimension.y + '.');
 
-        var tileSize = this.camera.getTileSize(),
-            screenSize = this.camera.screenSize,
-            offset = this.camera.isometricOffset,
-            skippedTiles = 0;
+        var tileSize = this.camera.getTileSize();
         
         for (var x = 0; x < dimension.x; x++) {
             for (var y = 0; y < dimension.y; y++) {
 
                 var tileData = data.tiles[x][y],
-                    tileCoordinates = tileData.position,
-                    tileContent = tileData.content,
-                    oldTile = this.cache.get(tileCoordinates);
+                        tileCoordinates = tileData.position,
+                        tileContent = tileData.content,
+                        oldTile = this.cache.get(tileCoordinates);
 
                 // Do something only if the tile changed
                 if (!oldTile || oldTile.content !== tileContent) {
 
-                    // TODO: Hide this ugly piece of code in a function
-                    var center = new Point(Math.round(((x - y) * tileSize.width + offset.x) / 2),
-                                           Math.round(((x + y - 1) * tileSize.height - offset.y) / 2));
+                    var center = this.camera.getIsometricCoordinates(x, y);
 
                     // Skip tiles that would end up out of the screen
-                    // TODO: Configure the boundaries properly
-                    if (center.x < -tileSize.width || center.y < -tileSize.height || center.x > screenSize.x || center.y > screenSize.y) {
-                        skippedTiles++;
-                    } else {
+                    if(this.camera.showTile(center)) {
                         // Remove the original tile
                         if (oldTile && oldTile.tile) {
                             oldTile.tile.remove();
                         }
 
                         // Draw the actual tile
-                        var tile = this.controller.createTile(this.context, tileContent);
+                        var tile = this.controller.createTile(this.tiles, tileContent);
 
                         tile.tile(tileSize);
                         // TODO: Move back to tile method if possible.
@@ -79,19 +75,23 @@ define(['jquery', 'point', 'datacache', 'camera', 'svg', 'svg.tile'], function($
                         tile.center = center;
 
                         // Add user controls handlers.
-                        tile.click(this.controller.onClick);                        
+                        tile.click(this.controller.onClick);
                         tile.move(center.x, center.y);
-                        
+
                         // TODO: Reorder all tiles infront of this one on the z-index
+                        // Keep UI in front of everything
+                        for (var i = 0; i < this.ui.length; i++) {
+                            this.ui[i].front();
+                        }
                     }
-                    
+
                     // Update the data cache
                     this.cache.set(tileCoordinates, tileContent, tile);
                 }
             }
         }
 
-        console.log(skippedTiles + ' out of ' + dimension.x * dimension.y + ' tiles were not (re)drawn.');
+
     };
 
     /**
@@ -131,15 +131,44 @@ define(['jquery', 'point', 'datacache', 'camera', 'svg', 'svg.tile'], function($
                 that.updateAsync();
             };
         })(this), this.refreshSpeed);
+
+        this.ui = this.controller.createUi(this.context);
     };
-    
-    
+
+
     Engine.prototype.resize = function(container) {
         var c = $(container),
-            size = new Point(c.innerWidth(), c.innerHeight());
-        
+                size = new Point(c.innerWidth(), c.innerHeight());
+
         this.camera.resizeViewport(size);
         this.context.size(size.x, size.y);
+    };
+
+
+    Engine.prototype.move = function(xDiff, yDiff) {
+
+        //TODO: Animate move all tiles in vector direction.
+        /*this.cache.cache.forEach(function(row) {
+            row.forEach(function(i) {
+                var tile = i.tile;
+                if (tile) {
+                    tile.center = new Point(tile.center.x + xDiff, tile.center.y + yDiff);
+                    tile.animate().move(tile.center.x, tile.center.y);
+                }                
+            });
+        });*/        
+        
+        this.tiles.animate(200).move(this.tiles.x() + xDiff, this.tiles.y() + yDiff);
+        
+        //TODO: Get rid of those outside screen.
+
+        var tileSize = this.camera.getTileSize();
+
+        this.camera.position = new Point(this.camera.position.x + xDiff / tileSize.width, this.camera.position.y + yDiff / tileSize.height);
+        
+        //TODO: Fetch new in screen from cache.
+        
+        //TODO: Wait for the update.
     };
 
     return Engine;
