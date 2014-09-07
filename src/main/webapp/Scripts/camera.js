@@ -51,10 +51,13 @@ define(['point'], function(Point){
         }
     };
     
-    Camera.prototype.getIsometricCoordinates = function(x, y) {
+    Camera.prototype.getIsometricCoordinates = function(position) {
+        
         var tileSize = this.getTileSize(),
-            isoCoordinates = new Point(Math.round(((x - y) * tileSize.width + this.isometricOffset.x) / 2),
-                                       Math.round(((x + y - 1) * tileSize.height - this.isometricOffset.y) / 2));
+            topLeft = new Point(this.position.x - this.screenSize.x / tileSize.width, this.position.y - this.screenSize.y / tileSize.height),
+            p = new Point(position.x - topLeft.x, position.y - topLeft.y),
+            isoCoordinates = new Point(Math.round(((p.x - p.y) * tileSize.width + this.isometricOffset.x) / 2),
+                                       Math.round(((p.x + p.y - 1) * tileSize.height - this.isometricOffset.y) / 2));
                                        
         return isoCoordinates;
     };
@@ -65,7 +68,7 @@ define(['point'], function(Point){
             ss = this.screenSize;
         
         // TODO: Configure the boundaries properly
-        return tileIsoCenter.x > -ts.width && tileIsoCenter.y > -ts.height && tileIsoCenter.x < ss.x && tileIsoCenter.y < ss.y
+        return tileIsoCenter.x > -ts.width && tileIsoCenter.y > -ts.height && tileIsoCenter.x < ss.x && tileIsoCenter.y < ss.y;
     };
     
     return Camera;

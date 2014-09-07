@@ -55,7 +55,7 @@ public class Chunk {
             List<Tile> row = tiles.get(x);
             
             for (int y = 0; y < width; y++) {
-                Tile tile = new Tile(new Point(x, y));
+                Tile tile = new Tile(new Point(this.topLeft.getX() + x, this.topLeft.getY() + y));
                 
                 if(changed < 100) {
                     if(tile.updateData()){

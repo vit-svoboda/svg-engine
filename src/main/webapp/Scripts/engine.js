@@ -57,12 +57,16 @@ define(['jquery', 'point', 'datacache', 'camera', 'svg', 'svg.tile', 'svg.foreig
                 // Do something only if the tile changed
                 if (!oldTile || oldTile.content !== tileContent) {
 
-                    var center = this.camera.getIsometricCoordinates(x, y);
+                    // Reuse old coordinates if possible, otherwise calculate new
+                    var center = oldTile && oldTile.tile ? oldTile.tile.center : this.camera.getIsometricCoordinates(tileCoordinates);
 
                     // Skip tiles that would end up out of the screen
                     if(this.camera.showTile(center)) {
                         // Remove the original tile
+                        
+                        var oldCoords;
                         if (oldTile && oldTile.tile) {
+                            oldCoords = oldTile.tile.center;
                             oldTile.tile.remove();
                         }
 
@@ -90,8 +94,6 @@ define(['jquery', 'point', 'datacache', 'camera', 'svg', 'svg.tile', 'svg.foreig
                 }
             }
         }
-
-
     };
 
     /**
