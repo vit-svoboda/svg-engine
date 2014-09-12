@@ -1,4 +1,4 @@
-define(['engine', 'jquery'], function(Engine, $) {
+define(['jquery', 'engine'], function($, Engine) {
     'use strict';
 
     function Client() {
@@ -24,7 +24,7 @@ define(['engine', 'jquery'], function(Engine, $) {
                     var center = tile.center;
                     
                     console.log('Placing a flag to ' + center + '.');
-                    var flag = tile.doc().polygon('0,0 0,-20 10,-15 0,-10').attr('class', 'Flag');
+                    var flag = tile.parent.polygon('0,0 0,-20 10,-15 0,-10').attr('class', 'Flag');
                     flag.move(center.x, center.y);
                     flag.click(function(e) {
                         $(e.originalTarget).remove();

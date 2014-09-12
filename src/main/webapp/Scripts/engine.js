@@ -19,7 +19,7 @@ define(['jquery', 'point', 'datacache', 'camera', 'svg', 'svg.tile', 'svg.foreig
             this.controller = controller;
             
             // Information about logical field of view.
-            this.camera = new Camera(new Point(35.1, 16.7));
+            this.camera = new Camera();//new Point(35.1, 16.7));
             this.cache = new DataCache();
             
             // Information about actually drawn field of view.
@@ -55,10 +55,11 @@ define(['jquery', 'point', 'datacache', 'camera', 'svg', 'svg.tile', 'svg.foreig
                         oldTile = this.cache.get(tileCoordinates);
 
                 // Do something only if the tile changed
-                if (!oldTile || oldTile.content !== tileContent) {
+                if (!oldTile || !oldTile.tile || oldTile.content !== tileContent) {
 
                     // Reuse old coordinates if possible, otherwise calculate new
-                    var center = oldTile && oldTile.tile ? oldTile.tile.center : this.camera.getIsometricCoordinates(tileCoordinates);
+                    var center = oldTile && oldTile.tile ? oldTile.tile.center : this.camera.getIsometricCoordinates(tileCoordinates),
+                        tile = null;
 
                     // Skip tiles that would end up out of the screen
                     if(this.camera.showTile(center)) {
@@ -71,7 +72,7 @@ define(['jquery', 'point', 'datacache', 'camera', 'svg', 'svg.tile', 'svg.foreig
                         }
 
                         // Draw the actual tile
-                        var tile = this.controller.createTile(this.tiles, tileContent);
+                        tile = this.controller.createTile(this.tiles, tileContent);
 
                         tile.tile(tileSize);
                         // TODO: Move back to tile method if possible.
@@ -128,6 +129,7 @@ define(['jquery', 'point', 'datacache', 'camera', 'svg', 'svg.tile', 'svg.foreig
      * Launches the engine update loop. 
      */
     Engine.prototype.run = function() {
+        
         this.timer = setInterval((function(that) {
             return function() {
                 that.updateAsync();
@@ -163,10 +165,8 @@ define(['jquery', 'point', 'datacache', 'camera', 'svg', 'svg.tile', 'svg.foreig
         this.tiles.animate(200).move(this.tiles.x() + xDiff, this.tiles.y() + yDiff);
         
         //TODO: Get rid of those outside screen.
-
-        var tileSize = this.camera.getTileSize();
-
-        this.camera.position = new Point(this.camera.position.x + xDiff / tileSize.width, this.camera.position.y + yDiff / tileSize.height);
+        
+        this.camera.move(xDiff, yDiff);
         
         //TODO: Fetch new in screen from cache.
         
