@@ -17,11 +17,11 @@ define(['jquery', 'point', 'datacache', 'camera', 'svg', 'svg.tile', 'svg.foreig
 
             this.context = SVG(container[0]);
             this.controller = controller;
-            
+
             // Information about logical field of view.
             this.camera = new Camera();//new Point(35.1, 16.7));
             this.cache = new DataCache();
-            
+
             // Information about actually drawn field of view.
             this.tiles = this.context.group();
 
@@ -45,14 +45,14 @@ define(['jquery', 'point', 'datacache', 'camera', 'svg', 'svg.tile', 'svg.foreig
         console.log('Redrawing to grid of size ' + dimension.x + 'x' + dimension.y + '.');
 
         var tileSize = this.camera.getTileSize();
-        
+
         for (var x = 0; x < dimension.x; x++) {
             for (var y = 0; y < dimension.y; y++) {
 
                 var tileData = data.tiles[x][y],
-                        tileCoordinates = tileData.position,
-                        tileContent = tileData.content,
-                        oldTile = this.cache.get(tileCoordinates);
+                    tileCoordinates = tileData.position,
+                    tileContent = tileData.content,
+                    oldTile = this.cache.get(tileCoordinates);
 
                 // Do something only if the tile changed
                 if (!oldTile || !oldTile.tile || oldTile.content !== tileContent) {
@@ -62,9 +62,9 @@ define(['jquery', 'point', 'datacache', 'camera', 'svg', 'svg.tile', 'svg.foreig
                         tile = null;
 
                     // Skip tiles that would end up out of the screen
-                    if(this.camera.showTile(center)) {
+                    if (this.camera.showTile(center)) {
                         // Remove the original tile
-                        
+
                         var oldCoords;
                         if (oldTile && oldTile.tile) {
                             oldCoords = oldTile.tile.center;
@@ -85,8 +85,10 @@ define(['jquery', 'point', 'datacache', 'camera', 'svg', 'svg.tile', 'svg.foreig
 
                         // TODO: Reorder all tiles infront of this one on the z-index
                         // Keep UI in front of everything
-                        for (var i = 0; i < this.ui.length; i++) {
-                            this.ui[i].front();
+                        if (this.ui) {
+                            for (var i = 0; i < this.ui.length; i++) {
+                                this.ui[i].front();
+                            }
                         }
                     }
 
@@ -98,51 +100,70 @@ define(['jquery', 'point', 'datacache', 'camera', 'svg', 'svg.tile', 'svg.foreig
     };
 
     /**
-     * Requests data update from the server and when it's delivered, redraws the screen. 
+     * Requests data update from the server and when it's delivered, redraws the screen.
+     * 
+     * @param {DOMHighResTimeStamp} timestamp from the beginning of the animation. In miliseconds, but with decimal precision to 10 microseconds. 
      */
-    Engine.prototype.updateAsync = function() {
-        var xmlHttp = new XMLHttpRequest();
+    Engine.prototype.updateAsync = function(timestamp) {
 
-        xmlHttp.onreadystatechange = (function(that) {
-            return function() {
-                if ((this.readyState === 4) && (this.status === 200)) {
-                    var data = JSON.parse(this.responseText);
-                    that.redraw(data);
-                }
+        // Don't bother server on every frame render.
+        if (!this.lastUpdate || timestamp - this.lastUpdate > this.refreshSpeed) {
+            this.lastUpdate = timestamp;
+            
+            var xmlHttp = new XMLHttpRequest();
+
+            xmlHttp.onreadystatechange = (function(that) {
+                return function() {
+                    if ((this.readyState === 4) && (this.status === 200)) {
+                        var data = JSON.parse(this.responseText);
+                        that.redraw(data);
+                    }
+                };
+            })(this);
+
+            try {
+                // Request data surrounding the current camera position
+                var screen = this.camera.getScreenOuterBounds();
+
+                xmlHttp.open('GET', this.controller.serverUrl + '/tiles/' + screen.join(), true);
+                xmlHttp.setRequestHeader('Content-type', 'application/json');
+                xmlHttp.send();
+            }
+            catch (error) {
+                console.log(error);
+            }
+        }
+        else {
+            //TODO: Only handle animations and I/O.
+        }
+        
+        requestAnimationFrame((function(that){
+            return function(timestamp) {
+                that.updateAsync(timestamp);
             };
-        })(this);
-
-        try {
-            // Request data surrounding the current camera position
-            var screen = this.camera.getScreenOuterBounds();
-
-            xmlHttp.open('GET', this.controller.serverUrl + '/tiles/' + screen.join(), true);
-            xmlHttp.setRequestHeader('Content-type', 'application/json');
-            xmlHttp.send();
-        }
-        catch (error) {
-            console.log(error);
-        }
+        })(this));
     };
 
     /**
      * Launches the engine update loop. 
      */
     Engine.prototype.run = function() {
-        
-        this.timer = setInterval((function(that) {
-            return function() {
-                that.updateAsync();
-            };
-        })(this), this.refreshSpeed);
+        this.lastUpdate = null;
 
-        this.ui = this.controller.createUi(this.context);
+        requestAnimationFrame((function(that) {
+            return function(timestamp) {
+                that.updateAsync(timestamp);
+            };
+        })(this));
+
+        //TODO: Make sure UI is always on top of everything.
+        //this.ui = this.controller.createUi(this.context);
     };
 
 
     Engine.prototype.resize = function(container) {
         var c = $(container),
-                size = new Point(c.innerWidth(), c.innerHeight());
+            size = new Point(c.innerWidth(), c.innerHeight());
 
         this.camera.resizeViewport(size);
         this.context.size(size.x, size.y);
@@ -160,16 +181,16 @@ define(['jquery', 'point', 'datacache', 'camera', 'svg', 'svg.tile', 'svg.foreig
                     tile.animate().move(tile.center.x, tile.center.y);
                 }                
             });
-        });*/        
-        
+         });*/
+
         this.tiles.animate(200).move(this.tiles.x() + xDiff, this.tiles.y() + yDiff);
-        
+
         //TODO: Get rid of those outside screen.
-        
+
         this.camera.move(xDiff, yDiff);
-        
+
         //TODO: Fetch new in screen from cache.
-        
+
         //TODO: Wait for the update.
     };
 
