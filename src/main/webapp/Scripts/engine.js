@@ -137,11 +137,7 @@ define(['jquery', 'point', 'datacache', 'camera', 'svg', 'svg.tile', 'svg.foreig
             //TODO: Only handle animations and I/O.
         }
         
-        requestAnimationFrame((function(that){
-            return function(timestamp) {
-                that.updateAsync(timestamp);
-            };
-        })(this));
+        requestAnimationFrame(this.updateAsync.bind(this));
     };
 
     /**
@@ -150,11 +146,7 @@ define(['jquery', 'point', 'datacache', 'camera', 'svg', 'svg.tile', 'svg.foreig
     Engine.prototype.run = function() {
         this.lastUpdate = null;
 
-        requestAnimationFrame((function(that) {
-            return function(timestamp) {
-                that.updateAsync(timestamp);
-            };
-        })(this));
+        requestAnimationFrame(this.updateAsync.bind(this));
 
         //TODO: Make sure UI is always on top of everything.
         //this.ui = this.controller.createUi(this.context);
