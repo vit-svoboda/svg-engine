@@ -146,6 +146,14 @@ define(['jquery', 'point', 'datacache', 'camera', 'svg', 'svg.tile', 'svg.foreig
     Engine.prototype.run = function() {
         this.lastUpdate = null;
 
+        this.spritesheet = [];
+        this.spritesheet['sand'] = this.context.pattern(1, 1, function(add) { add.image('Images/sand.png').width(100).height(50); })
+                                               .attr({ patternUnits: 'objectBoundingBox' });
+                                       
+        this.spritesheet['grass'] = this.context.pattern(1, 1, function(add) { add.image('Images/grass.png').width(100).height(50); })
+                                                .attr({ patternUnits: 'objectBoundingBox' });
+                                               
+
         requestAnimationFrame(this.updateAsync.bind(this));
 
         //TODO: Make sure UI is always on top of everything.

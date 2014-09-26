@@ -8,11 +8,14 @@ define(['jquery', 'engine'], function($, Engine) {
                 createTile: function(context, content) {   
                     switch(content) {
                         case 1:
-                            return context.image('Images/grass.png');
+                            return context.sprite(engine.spritesheet['grass']);
                          
                         case 2:
-                            return context.image('Images/sand.png');
+                            return context.sprite(engine.spritesheet['sand']);
                             
+                        //TODO: This is likely what the final call will need to look like. Probably should wrap that into a sprite descriptor object.
+                        //    return context.sprite('Images/sand.png', 100, 50, new Point(100 /* second image */, 100 /* third row */), 16 /* frames */, 30 /* fps */);
+                          
                         default:
                             return context.polygon().attr('class', 'Tile');
                     }
