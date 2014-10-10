@@ -147,10 +147,10 @@ define(['jquery', 'point', 'datacache', 'camera', 'svg', 'svg.tile', 'svg.foreig
         this.lastUpdate = null;
 
         this.spritesheet = [];
-        this.spritesheet['sand'] = this.context.pattern(1, 1, function(add) { add.image('Images/sand.png').width(100).height(50); })
+        this.spritesheet['sand'] = this.context.pattern(1, 1, function(add) { add.image('Images/tiles.png').width(200).height(100); })
                                                .attr({ patternUnits: 'objectBoundingBox' });
                                        
-        this.spritesheet['grass'] = this.context.pattern(1, 1, function(add) { add.image('Images/grass.png').width(100).height(50); })
+        this.spritesheet['grass'] = this.context.pattern(1, 1, function(add) { add.image('Images/tiles.png').attr({ x: -100, y: -50, width: 200, height: 100}); })
                                                 .attr({ patternUnits: 'objectBoundingBox' });
                                                
 
