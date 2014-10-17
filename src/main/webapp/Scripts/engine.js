@@ -1,4 +1,4 @@
-define(['jquery', 'point', 'datacache', 'camera', 'svg', 'svg.tile', 'svg.foreignobject'], function($, Point, DataCache, Camera, SVG) {
+define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.tile', 'svg.foreignobject'], function($, Point, DataCache, Camera, SpriteSheet, SVG) {
     'use strict';
 
     /**
@@ -21,6 +21,7 @@ define(['jquery', 'point', 'datacache', 'camera', 'svg', 'svg.tile', 'svg.foreig
             // Information about logical field of view.
             this.camera = new Camera();//new Point(35.1, 16.7));
             this.cache = new DataCache();
+            this.spritesheet = new SpriteSheet(this.context);
 
             // Information about actually drawn field of view.
             this.tiles = this.context.group();
@@ -105,6 +106,7 @@ define(['jquery', 'point', 'datacache', 'camera', 'svg', 'svg.tile', 'svg.foreig
      * @param {DOMHighResTimeStamp} timestamp from the beginning of the animation. In miliseconds, but with decimal precision to 10 microseconds. 
      */
     Engine.prototype.updateAsync = function(timestamp) {
+        requestAnimationFrame(this.updateAsync.bind(this));
 
         // Don't bother server on every frame render.
         if (!this.lastUpdate || timestamp - this.lastUpdate > this.refreshSpeed) {
@@ -135,24 +137,16 @@ define(['jquery', 'point', 'datacache', 'camera', 'svg', 'svg.tile', 'svg.foreig
         }
         else {
             //TODO: Only handle animations and I/O.
+
+            this.spritesheet.animateSprites(timestamp);
         }
-        
-        requestAnimationFrame(this.updateAsync.bind(this));
     };
 
     /**
      * Launches the engine update loop. 
      */
     Engine.prototype.run = function() {
-        this.lastUpdate = null;
-
-        this.spritesheet = [];
-        this.spritesheet['sand'] = this.context.pattern(1, 1, function(add) { add.image('Images/tiles.png').width(200).height(100); })
-                                               .attr({ patternUnits: 'objectBoundingBox' });
-                                       
-        this.spritesheet['grass'] = this.context.pattern(1, 1, function(add) { add.image('Images/tiles.png').attr({ x: -100, y: -50, width: 200, height: 100}); })
-                                                .attr({ patternUnits: 'objectBoundingBox' });
-                                               
+        this.lastUpdate = null;                                              
 
         requestAnimationFrame(this.updateAsync.bind(this));
 
