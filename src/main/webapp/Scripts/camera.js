@@ -57,18 +57,18 @@ define(['point'], function(Point){
             this.topLeft = new Point(this.position.x - this.screenSize.x / tileSize.width, this.position.y - this.screenSize.y / tileSize.height);
         }
         return this.topLeft;
-    };  
+    };
     
     Camera.prototype.getIsometricCoordinates = function(position) {
-        
-        var tileSize = this.getTileSize(),
+        var tileSize = this.getTileSize(),            
             topLeft = this.getTopLeft(),
-            p = new Point(position.x - topLeft.x, position.y - topLeft.y),
-            isoCoordinates = new Point(Math.round(((p.x - p.y) * tileSize.width + this.isometricOffset.x) / 2),
-                                       Math.round(((p.x + p.y) * tileSize.height - this.isometricOffset.y) / 2));
-                                       
-        return isoCoordinates;
-    };    
+            x = position.x - topLeft.x,
+            y = position.y - topLeft.y,
+            offset = this.isometricOffset;
+    
+        return new Point((((x - y) * tileSize.width + offset.x) / 2),
+                         (((x + y) * tileSize.height - offset.y) / 2));
+    };
     
     Camera.prototype.getOriginalCoordinates = function(x, y) {
         var ts = this.getTileSize(),
@@ -83,8 +83,10 @@ define(['point'], function(Point){
         var ts = this.getTileSize(),
             ss = this.screenSize;
         
-        // TODO: Configure the boundaries properly
-        return tileIsoCenter.x > -ts.width && tileIsoCenter.y > -ts.height && tileIsoCenter.x < ss.x && tileIsoCenter.y < ss.y;
+        return tileIsoCenter.x > -ts.width
+                && tileIsoCenter.y > -ts.height
+                && tileIsoCenter.x < ss.x
+                && tileIsoCenter.y < ss.y;
     };    
     
     Camera.prototype.move = function(xDiff, yDiff) {

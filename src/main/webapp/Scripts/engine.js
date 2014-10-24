@@ -41,43 +41,40 @@ define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.til
      * @param {Chunk} data Fresh data for the screen
      */
     Engine.prototype.redraw = function(data) {
-        var dimension = new Point(data.tiles.length, data.tiles[0].length);
+        var dimension = new Point(data.tiles.length, data.tiles[0].length),
+            tileSize = this.camera.getTileSize(),
+            tileData,
+            oldTile,
+            oldCoords,
+            center,
+            tile,
+            x, y, i;
 
-        console.log('Redrawing to grid of size ' + dimension.x + 'x' + dimension.y + '.');
-
-        var tileSize = this.camera.getTileSize();
-
-        for (var x = 0; x < dimension.x; x++) {
-            for (var y = 0; y < dimension.y; y++) {
-
-                var tileData = data.tiles[x][y],
-                    tileCoordinates = tileData.position,
-                    tileContent = tileData.content,
-                    oldTile = this.cache.get(tileCoordinates);
+        for (x = 0; x < dimension.x; x++) {
+            for (y = 0; y < dimension.y; y++) {
+                tileData = data.tiles[x][y];
+                oldTile = this.cache.get(tileData.position);
 
                 // Do something only if the tile changed
-                if (!oldTile || !oldTile.tile || oldTile.content !== tileContent) {
+                if (!oldTile || !oldTile.tile || oldTile.content !== tileData.content) {
 
                     // Reuse old coordinates if possible, otherwise calculate new
-                    var center = oldTile && oldTile.tile ? oldTile.tile.center : this.camera.getIsometricCoordinates(tileCoordinates),
-                        tile = null;
+                    center = oldTile && oldTile.tile ? oldTile.tile.center : this.camera.getIsometricCoordinates(tileData.position);
 
                     // Skip tiles that would end up out of the screen
                     if (this.camera.showTile(center)) {
                         // Remove the original tile
-
-                        var oldCoords;
                         if (oldTile && oldTile.tile) {
                             oldCoords = oldTile.tile.center;
                             oldTile.tile.remove();
                         }
 
                         // Draw the actual tile
-                        tile = this.controller.createTile(this.tiles, tileContent);
+                        tile = this.controller.createTile(this.tiles, tileData.content);
 
                         tile.tile(tileSize);
                         // TODO: Move back to tile method if possible.
-                        tile.coordinates = tileCoordinates;
+                        tile.coordinates = tileData.position;
                         tile.center = center;
 
                         // Add user controls handlers.
@@ -87,14 +84,14 @@ define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.til
                         // TODO: Reorder all tiles infront of this one on the z-index
                         // Keep UI in front of everything
                         if (this.ui) {
-                            for (var i = 0; i < this.ui.length; i++) {
+                            for (i = 0; i < this.ui.length; i++) {
                                 this.ui[i].front();
                             }
                         }
                     }
 
                     // Update the data cache
-                    this.cache.set(tileCoordinates, tileContent, tile);
+                    this.cache.set(tileData.position, tileData.content, tile);
                 }
             }
         }
