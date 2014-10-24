@@ -13,6 +13,9 @@ define(['jquery', 'engine'], function($, Engine) {
                         case 2:
                             return context.sprite(engine.spritesheet.get('sand'));
                             
+                        case 3:
+                            return context.sprite(engine.spritesheet.get('concrete'));
+                            
                         //TODO: This is likely what the final call will need to look like. Probably should wrap that into a sprite descriptor object.
                         //    return context.sprite('Images/sand.png', 100, 50, new Point(100 /* second image */, 100 /* third row */), 16 /* frames */, 30 /* fps */);
                           
@@ -68,9 +71,10 @@ define(['jquery', 'engine'], function($, Engine) {
             var engine = new Engine($('#viewport'), controller);
             
             // Load assets
-            engine.spritesheet.load('Images/tiles.png', 200, 100);
-            engine.spritesheet.define('sand', 0, 0, 2, 30);
-            engine.spritesheet.define('grass', 0, 50, 2);
+            engine.spritesheet.load('Images/tiles.png', 500, 150);
+            engine.spritesheet.define('sand', 0, 0, 5);
+            engine.spritesheet.define('grass', 0, 50, 3, 200);
+            engine.spritesheet.define('concrete', 0, 100);
             
             engine.run();
         });

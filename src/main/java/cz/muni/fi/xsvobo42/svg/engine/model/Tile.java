@@ -51,7 +51,7 @@ public class Tile {
     public int getContent() {
         Integer data = serverCache.get(position);
         if(data == null){
-            data = RNG.nextInt(3);
+            data = RNG.nextInt(4);
         }
         setContent(data);
         
@@ -70,7 +70,7 @@ public class Tile {
 
     public boolean updateData() {
         if(RNG.nextBoolean() && RNG.nextBoolean() && RNG.nextBoolean() && RNG.nextBoolean()) {
-            setContent((getContent() + 1) % 3);
+            setContent((getContent() + 1) % 4);
             
             return true;
         }

@@ -36,10 +36,10 @@ define(function() {
             var i = this.currentFrame || 0;
             if (i < this.animationFrameCount) {
                 // TODO: If animation is not cyclic, it should stay on the last frame
-                i = ++i % this.animationFrameCount;                
-                
+                i = ++i % this.animationFrameCount;
+
                 // TODO: Sprite needs it's width defined.
-                this._children[0].attr({ x: i * -100 });
+                this._children[0].x(i * -100);
                 this.currentFrame = i;
             }
         };
@@ -52,13 +52,15 @@ define(function() {
     };
 
     SpriteSheet.prototype.animateSprites = function(timestamp) {
-
         for (var s in this.sprites) {
             if (s) {
                 s = this.sprites[s];
-                
-                // TODO: Animate only when time's right
-                s.nextFrame();
+
+                // Show new frame only if the previous one has been displayed for sufficient time
+                if (timestamp - (s.lastFrameTime || 0) >= s.animationSpeed) {
+                    s.nextFrame();
+                    s.lastFrameTime = timestamp;
+                }
             }
         }
     };
