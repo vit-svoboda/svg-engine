@@ -26,7 +26,7 @@
     </repositories>
             
     <dependencies>
-         <!-- RESTEasy core library -->        
+        <!-- RESTEasy core library -->        
         <dependency>
             <groupId>org.jboss.resteasy</groupId>
             <artifactId>resteasy-jaxrs</artifactId>
@@ -121,6 +121,21 @@
                 <groupId>com.google.appengine</groupId>
                 <artifactId>appengine-maven-plugin</artifactId>
                 <version>${appengine.target.version}</version>
+            </plugin>
+            <plugin>
+                <groupId>com.kelveden</groupId>
+                <artifactId>maven-karma-plugin</artifactId>
+                <version>1.8</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>start</goal>
+                        </goals>
+                        <configuration>
+                            <configFile>src\main\webapp\Scripts\test\karma.conf.js</configFile>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
