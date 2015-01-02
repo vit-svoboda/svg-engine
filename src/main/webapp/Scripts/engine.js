@@ -48,7 +48,7 @@ define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.til
             oldCoords,
             center,
             tile,
-            x, y, i;
+            x, y;
 
         for (x = 0; x < dimension.x; x++) {
             for (y = 0; y < dimension.y; y++) {
@@ -62,7 +62,8 @@ define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.til
                     center = oldTile && oldTile.tile ? oldTile.tile.center : this.camera.getIsometricCoordinates(tileData.position);
 
                     // Skip tiles that would end up out of the screen
-                    if (this.camera.showTile(center)) {
+                    if (this.camera.showTile(center, tileSize)) {
+                        
                         // Remove the original tile
                         if (oldTile && oldTile.tile) {
                             oldCoords = oldTile.tile.center;
@@ -79,15 +80,11 @@ define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.til
 
                         // Add user controls handlers.
                         tile.click(this.controller.onClick);
-                        tile.move(center.x, center.y);
+                        
+                        // Move operates with top left corner, while my center is tile center.
+                        tile.move(center.x - tileSize.width / 2, center.y - tileSize.height / 2);
 
                         // TODO: Reorder all tiles infront of this one on the z-index
-                        // Keep UI in front of everything
-                        if (this.ui) {
-                            for (i = 0; i < this.ui.length; i++) {
-                                this.ui[i].front();
-                            }
-                        }
                     }
 
                     // Update the data cache
@@ -95,6 +92,8 @@ define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.til
                 }
             }
         }
+        
+        console.log(this.tiles.children().length);
     };
 
     /**
@@ -148,7 +147,7 @@ define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.til
         requestAnimationFrame(this.updateAsync.bind(this));
 
         //TODO: Make sure UI is always on top of everything.
-        //this.ui = this.controller.createUi(this.context);
+        this.ui = this.controller.createUi(this.context);
     };
 
 
@@ -162,27 +161,12 @@ define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.til
 
 
     Engine.prototype.move = function(xDiff, yDiff) {
-
-        //TODO: Animate move all tiles in vector direction.
-        /*this.cache.cache.forEach(function(row) {
-            row.forEach(function(i) {
-                var tile = i.tile;
-                if (tile) {
-                    tile.center = new Point(tile.center.x + xDiff, tile.center.y + yDiff);
-                    tile.animate().move(tile.center.x, tile.center.y);
-                }                
-            });
-         });*/
-
         this.tiles.animate(200).move(this.tiles.x() + xDiff, this.tiles.y() + yDiff);
-
-        //TODO: Get rid of those outside screen.
 
         this.camera.move(xDiff, yDiff);
 
+        //TODO: Get rid of those outside screen.
         //TODO: Fetch new in screen from cache.
-
-        //TODO: Wait for the update.
     };
 
     return Engine;

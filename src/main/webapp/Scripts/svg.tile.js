@@ -29,7 +29,8 @@ define(['svg'], function(SVG) {
         },
         construct: {
             sprite: function(sprite/* my 7 parameters */) {
-                return this.put(new SVG.Sprite).attr('fill', sprite);
+                //TODO: Put new items bellow the UI, but not at 0
+                return this.put(new SVG.Sprite, 0).attr('fill', sprite);
             }
         }
     });
