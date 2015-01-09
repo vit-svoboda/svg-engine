@@ -14,6 +14,7 @@ module.exports = function(config) {
       'test/main-test.js',
       { pattern: '*.js', included: false },
       { pattern: 'third-party/*.js', included: false },
+      { pattern: 'test/jasmineExtensions.js', included: false },
       { pattern: 'test/unit/*.js', included: false }
     ],
     

@@ -94,6 +94,7 @@ define(['camera', 'point'], function (Camera, Point) {
                 expect(camera.getIsometricCoordinates(new Point(2.5, 1.5))).toEqual(new Point(2.5, 1.5));
                 done();
             });
+            */
 
             it('Transforms logical coordinates to isometric and back consistently.', function (done) {
                 camera.resizeViewport(new Point(5, 3));
@@ -134,6 +135,7 @@ define(['camera', 'point'], function (Camera, Point) {
                 done();
             });
 
+            /*
             it('Transforms coordinates correctly.', function (done) {
                 camera.resizeViewport(new Point(5, 3));
                 
@@ -154,13 +156,21 @@ define(['camera', 'point'], function (Camera, Point) {
 
                 expect(camera.position).toEqual(new Point(0, 0));
 
-                camera.move(1, 1);
+                camera.move(1, 0);
 
-                expect(camera.position).toEqual(new Point(2.5, 1.5));
+                expect(camera.position).toEqual(new Point(1, -1));
 
-                camera.move(1, 1);
+                camera.move(0, 1);
 
+                expect(camera.position).toEqual(new Point(3, 1));
+
+                camera.move(0, 1)
+                
                 expect(camera.position).toEqual(new Point(5, 3));
+
+                camera.move(1, 0);
+
+                expect(camera.position).toEqual(new Point(6, 2));
 
                 camera.move(-2, -2);
 

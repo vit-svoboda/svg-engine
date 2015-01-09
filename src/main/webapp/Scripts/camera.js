@@ -46,7 +46,7 @@ define(['point'], function (Point) {
 
         // Changing isometric offset during the run would undesirably move exiting tiles.
         if (!this.isometricOffset) {
-           var aspectRatio = newSize.x / (newSize.y * 2);
+           var aspectRatio = newSize.x / (newSize.y * 2) || 1;
             this.isometricOffset = new Point(newSize.x / aspectRatio - tileSize.width,
                                              newSize.y * aspectRatio);
         }
@@ -76,15 +76,17 @@ define(['point'], function (Point) {
             x = position.x - topLeft.x,
             y = position.y - topLeft.y;
 
-        return new Point((((x - y) * tileSize.width + this.isometricOffset.x) / 2) - this.moveTransform.x,
-                         (((x + y) * tileSize.height - this.isometricOffset.y) / 2) - this.moveTransform.y);
+        return new Point(((x - y) * tileSize.width + this.isometricOffset.x) / 2 - this.moveTransform.x,
+                         ((x + y) * tileSize.height - this.isometricOffset.y) / 2 - this.moveTransform.y);
     };
 
-    Camera.prototype.getOriginalCoordinates = function (x, y) {
+    Camera.prototype.getOriginalCoordinates = function (x, y, ignoreOffset) {
         var ts = this.getTileSize(),
-            px = x / (2 * ts.width),
-            py = y / ts.height,
-            position = new Point(py + px, py - px);
+            offsetx = ignoreOffset ? 0 : this.moveTransform.x - (this.isometricOffset.x / 2),
+            offsety = ignoreOffset ? 0 : this.moveTransform.y + (this.isometricOffset.y / 2),
+            isox = (x + offsetx) / ts.width,
+            isoy = (y + offsety) / ts.height,
+            position = new Point(isoy + isox, isoy - isox);
 
         return position;
     };
@@ -101,9 +103,10 @@ define(['point'], function (Point) {
     };
 
     Camera.prototype.move = function (xDiff, yDiff) {
-        var logicalDiff = this.getOriginalCoordinates(xDiff, yDiff);
+        var logicalDiff = this.getOriginalCoordinates(xDiff, yDiff, true);
 
         this.position = new Point(this.position.x + logicalDiff.x, this.position.y + logicalDiff.y);
+        
         // Clear top left coordinate so it gets recalculated on next access
         this.topLeft = null;
         this.moveTransform.x += xDiff;
