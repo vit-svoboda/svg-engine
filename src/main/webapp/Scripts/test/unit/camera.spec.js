@@ -69,32 +69,6 @@ define(['camera', 'point'], function (Camera, Point) {
                 
                 expect(camera.getScreenOuterBounds()).toEqual([ new Point(-3, 0), new Point(9, 12) ]);
             });
-            
-            /*
-            it('Repositions corners outside of the screen.', function(done){
-                camera.resizeViewport(new Point(5, 3));
-                
-                expect(camera.getIsometricCoordinates(new Point(0, 0))).toEqual(new Point(2.5, -1.25));
-                expect(camera.getIsometricCoordinates(new Point(0, 1.5))).toEqual(new Point(0, 0));
-                
-                expect(camera.getIsometricCoordinates(new Point(5, 0))).toEqual(new Point(5, 0));
-                expect(camera.getIsometricCoordinates(new Point(2.5, 0))).toEqual(new Point(5, 0));
-                
-                expect(camera.getIsometricCoordinates(new Point(5, 3))).toEqual(new Point(3.5, 0.75));
-                expect(camera.getIsometricCoordinates(new Point(5, 3))).toEqual(new Point(5, 3));
-                
-                expect(camera.getIsometricCoordinates(new Point(0, 3))).toEqual(new Point(1, -0.5));
-                expect(camera.getIsometricCoordinates(new Point(2.5, 6))).toEqual(new Point(0, 3));
-                done();
-            });
-
-            it('Keeps center in the center.', function (done) {
-                camera.resizeViewport(new Point(5, 3));
-                
-                expect(camera.getIsometricCoordinates(new Point(2.5, 1.5))).toEqual(new Point(2.5, 1.5));
-                done();
-            });
-            */
 
             it('Transforms logical coordinates to isometric and back consistently.', function (done) {
                 camera.resizeViewport(new Point(5, 3));
@@ -134,18 +108,31 @@ define(['camera', 'point'], function (Camera, Point) {
 
                 done();
             });
-
-            /*
-            it('Transforms coordinates correctly.', function (done) {
+            
+            it('Transforms logical coordinates to isometric correctly.', function (done) {
                 camera.resizeViewport(new Point(5, 3));
                 
-                expect(camera.getIsometricCoordinates(new Point(0, 0))).toEqual(new Point(0, 1));
-                expect(camera.getIsometricCoordinates(new Point(1, 0))).toEqual(new Point(3, 0));
-                expect(camera.getIsometricCoordinates(new Point(0, 1))).toEqual(new Point(3, 3));
-                expect(camera.getIsometricCoordinates(new Point(1, 1))).toEqual(new Point(5, 1));
+                // First tile is  moved above the center due to the offset
+                expect(camera.getIsometricCoordinates(new Point(0, 0))).toEqual(new Point(2.5, -1.25));
+                expect(camera.getIsometricCoordinates(new Point(1, 0))).toEqual(new Point(3, -1));
+                expect(camera.getIsometricCoordinates(new Point(0, 1))).toEqual(new Point(2, -1));
+                expect(camera.getIsometricCoordinates(new Point(1, 1))).toEqual(new Point(2.5, -0.75));
+                
+                // Corners of the screen are populated with with additionaly obtained tiles
+                expect(camera.getIsometricCoordinates(new Point(0, 5))).toEqual(new Point(0, 0));
+                expect(camera.getIsometricCoordinates(new Point(6, 11))).toEqual(new Point(0, 3));
+                
+                // Top right corner is not moved by this transformation!
+                expect(camera.getIsometricCoordinates(new Point(5, 0))).toEqual(new Point(5, 0));
+                expect(camera.getIsometricCoordinates(new Point(11, 6))).toEqual(new Point(5, 3));
+                
+                // Remaining corners of the area required to populate the whole screen with tiles
+                expect(camera.getIsometricCoordinates(new Point(11, 0))).toEqual(new Point(8, 1.5));
+                expect(camera.getIsometricCoordinates(new Point(0, 11))).toEqual(new Point(-3, 1.5));                
+                expect(camera.getIsometricCoordinates(new Point(11, 11))).toEqual(new Point(2.5, 4.25));
+                
                 done();
             });
-            */
         });
 
         describe('Camera can be moved.', function () {
@@ -164,7 +151,7 @@ define(['camera', 'point'], function (Camera, Point) {
 
                 expect(camera.position).toEqual(new Point(3, 1));
 
-                camera.move(0, 1)
+                camera.move(0, 1);
                 
                 expect(camera.position).toEqual(new Point(5, 3));
 
