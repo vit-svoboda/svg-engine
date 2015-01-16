@@ -161,7 +161,7 @@ define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.til
 
 
     Engine.prototype.move = function(xDiff, yDiff) {
-        this.tiles.animate(200).move(this.tiles.x() + xDiff, this.tiles.y() + yDiff);
+        this.tiles.animate(200).move(this.tiles.x() + -xDiff, this.tiles.y() + -yDiff);
 
         this.camera.move(xDiff, yDiff);
 

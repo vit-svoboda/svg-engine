@@ -46,7 +46,7 @@ define(['point'], function (Point) {
 
         // Changing isometric offset during the run would undesirably move exiting tiles.
         if (!this.isometricOffset) {
-           var aspectRatio = newSize.x / (newSize.y * 2) || 1;
+            var aspectRatio = newSize.x / (newSize.y * 2) || 1;
             this.isometricOffset = new Point(newSize.x / aspectRatio - tileSize.width,
                                              newSize.y * aspectRatio);
         }
@@ -62,28 +62,19 @@ define(['point'], function (Point) {
         */
     };
 
-    Camera.prototype.getTopLeft = function () {
-        if (!this.topLeft) {
-            var tileSize = this.getTileSize();
-            this.topLeft = new Point(this.position.x - this.screenSize.x / tileSize.width, this.position.y - this.screenSize.y / tileSize.height);
-        }
-        return this.topLeft;
-    };
-
     Camera.prototype.getIsometricCoordinates = function (position) {
         var tileSize = this.getTileSize(),
-            topLeft = this.getTopLeft(),
-            x = position.x - topLeft.x,
-            y = position.y - topLeft.y;
+            x = position.x,
+            y = position.y;
 
-        return new Point(((x - y) * tileSize.width + this.isometricOffset.x) / 2 - this.moveTransform.x,
-                         ((x + y) * tileSize.height - this.isometricOffset.y) / 2 - this.moveTransform.y);
+        return new Point(((x - y) * tileSize.width + this.isometricOffset.x) / 2,
+                         ((x + y) * tileSize.height - this.isometricOffset.y) / 2);
     };
 
     Camera.prototype.getOriginalCoordinates = function (x, y, ignoreOffset) {
         var ts = this.getTileSize(),
-            offsetx = ignoreOffset ? 0 : this.moveTransform.x - (this.isometricOffset.x / 2),
-            offsety = ignoreOffset ? 0 : this.moveTransform.y + (this.isometricOffset.y / 2),
+            offsetx = ignoreOffset ? 0 : (-this.isometricOffset.x / 2),
+            offsety = ignoreOffset ? 0 : (this.isometricOffset.y / 2),
             isox = (x + offsetx) / ts.width,
             isoy = (y + offsety) / ts.height,
             position = new Point(isoy + isox, isoy - isox);
@@ -107,8 +98,6 @@ define(['point'], function (Point) {
 
         this.position = new Point(this.position.x + logicalDiff.x, this.position.y + logicalDiff.y);
         
-        // Clear top left coordinate so it gets recalculated on next access
-        this.topLeft = null;
         this.moveTransform.x += xDiff;
         this.moveTransform.y += yDiff;
     };

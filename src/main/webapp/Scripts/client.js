@@ -41,16 +41,16 @@ define(['jquery', 'engine'], function($, Engine) {
                         speed = 100,
                         toolbar = $('<div style="background-color:LightSteelBlue;padding:5px"></div>'),
                         up = $('<button type="button">UP</button>').click(function(e) {
-                            engine.move(0, speed);
-                        }),
-                        down = $('<button type="button">DOWN</button>').click(function(e) {
                             engine.move(0, -speed);
                         }),
+                        down = $('<button type="button">DOWN</button>').click(function(e) {
+                            engine.move(0, speed);
+                        }),
                         left = $('<button type="button">LEFT</button>').click(function(e) {
-                            engine.move(speed, 0);
+                            engine.move(-speed, 0);
                         }),
                         right = $('<button type="button">RIGHT</button>').click(function(e) {
-                            engine.move(-speed, 0);
+                            engine.move(speed, 0);
                         });
                         
                     toolbar.append(up, down, left, right);
