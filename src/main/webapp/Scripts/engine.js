@@ -146,7 +146,6 @@ define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.til
 
         requestAnimationFrame(this.updateAsync.bind(this));
 
-        //TODO: Make sure UI is always on top of everything.
         this.ui = this.controller.createUi(this.context);
     };
 
