@@ -34,6 +34,73 @@ define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.til
             };
         }
     }
+    
+    
+    /**
+     * Draws a tile on the screen.
+     * 
+     * @param {type} tileData containing logical coordinates and tile content.
+     * @param {type} tileSize size of the tile on screen.
+     * @param {Point} center of the tile on the screen.
+     */
+    Engine.prototype.drawTile = function(tileData, tileSize, center) {
+                  
+        // Draw the actual tile
+        var tile = this.controller.createTile(this.tiles, tileData.content);
+
+        tile.tile(tileSize);
+                
+        tile.coordinates = tileData.position;
+        tile.center = center;
+
+        // Add user controls handlers.
+        tile.click(this.controller.onClick);
+                        
+        // Move operates with top left corner, while my center is tile center.
+        tile.move(center.x - tileSize.width / 2, center.y - tileSize.height / 2);
+
+        // TODO: Reorder all tiles infront of this one on the z-index
+            
+        return tile;
+    };
+    
+    
+    /**
+     * Updates data cache and if the tile needs to be redrawn, returns its coordinates on screen.
+     * 
+     * @param {type} tileData containing logical coordinates and tile content.
+     * @param {type} tileSize tileSize is optionally passed in to prevent recalculation for each updated tile and hence improve performance.
+     */
+    Engine.prototype.updateTile = function(tileData, tileSize) {
+        var oldTile = this.cache.get(tileData.position),
+            center,
+            tile;
+
+        // Do something only if the tile changed
+        if (!oldTile || !oldTile.tile || oldTile.content !== tileData.content) {
+
+            // Reuse old coordinates if possible, otherwise calculate new
+            if (oldTile && oldTile.tile) {
+                center = oldTile.tile.center;
+                
+                // Remove the original tile
+                oldTile.tile.remove();
+            } else {
+                center = this.camera.getIsometricCoordinates(tileData.position);
+            }
+
+            tileSize = tileSize || this.camera.getTileSize();
+
+            // Skip tiles that would end up out of the screen
+            if (this.camera.showTile(center, tileSize)) {
+                tile = this.drawTile(tileData, tileSize, center);
+            }
+            
+            // Update the data cache
+            this.cache.set(tileData.position, tileData.content, tile);
+        }
+    };
+    
 
     /**
      * Updates the screen with tiles based on given data.
@@ -43,57 +110,13 @@ define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.til
     Engine.prototype.redraw = function(data) {
         var dimension = new Point(data.tiles.length, data.tiles[0].length),
             tileSize = this.camera.getTileSize(),
-            tileData,
-            oldTile,
-            oldCoords,
-            center,
-            tile,
             x, y;
 
         for (x = 0; x < dimension.x; x++) {
             for (y = 0; y < dimension.y; y++) {
-                tileData = data.tiles[x][y];
-                oldTile = this.cache.get(tileData.position);
-
-                // Do something only if the tile changed
-                if (!oldTile || !oldTile.tile || oldTile.content !== tileData.content) {
-
-                    // Reuse old coordinates if possible, otherwise calculate new
-                    center = oldTile && oldTile.tile ? oldTile.tile.center : this.camera.getIsometricCoordinates(tileData.position);
-
-                    // Skip tiles that would end up out of the screen
-                    if (this.camera.showTile(center, tileSize)) {
-                        
-                        // Remove the original tile
-                        if (oldTile && oldTile.tile) {
-                            oldCoords = oldTile.tile.center;
-                            oldTile.tile.remove();
-                        }
-
-                        // Draw the actual tile
-                        tile = this.controller.createTile(this.tiles, tileData.content);
-
-                        tile.tile(tileSize);
-                        // TODO: Move back to tile method if possible.
-                        tile.coordinates = tileData.position;
-                        tile.center = center;
-
-                        // Add user controls handlers.
-                        tile.click(this.controller.onClick);
-                        
-                        // Move operates with top left corner, while my center is tile center.
-                        tile.move(center.x - tileSize.width / 2, center.y - tileSize.height / 2);
-
-                        // TODO: Reorder all tiles infront of this one on the z-index
-                    }
-
-                    // Update the data cache
-                    this.cache.set(tileData.position, tileData.content, tile);
-                }
+                this.updateTile(data.tiles[x][y], tileSize);
             }
         }
-        
-        console.log(this.tiles.children().length);
     };
 
     /**
@@ -130,8 +153,7 @@ define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.til
             catch (error) {
                 console.log(error);
             }
-        }
-        else {
+        } else {
             //TODO: Only handle animations and I/O.
 
             this.spritesheet.animateSprites(timestamp);

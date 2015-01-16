@@ -1,6 +1,6 @@
 (function () {
 
-    var tests = ['test/jasmineExtensions', 'test/unit/camera.spec', 'test/unit/datacache.spec'];
+    var tests = ['test/jasmineExtensions', 'test/unit/camera.spec', 'test/unit/datacache.spec', 'test/integration/engine.spec'];
 
     require.config({
         baseUrl: window.__karma__ ? '/base' : '../Scripts',

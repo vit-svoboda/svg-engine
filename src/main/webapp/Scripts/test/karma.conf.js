@@ -15,7 +15,8 @@ module.exports = function(config) {
       { pattern: '*.js', included: false },
       { pattern: 'third-party/*.js', included: false },
       { pattern: 'test/jasmineExtensions.js', included: false },
-      { pattern: 'test/unit/*.js', included: false }
+      { pattern: 'test/unit/*.spec.js', included: false },
+      { pattern: 'test/integration/*.spec.js', included: false }
     ],
     
     exclude: [
