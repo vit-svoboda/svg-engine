@@ -24,3 +24,14 @@
     stroke: black;
     stroke-width: 1px;
 }
+
+.menu {
+    background-color: LightSteelBlue;
+    padding: 5px;
+    float:left;
+}
+
+.arrow {
+    width: 2em;
+    height: 2em;
+}

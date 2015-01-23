@@ -50,6 +50,7 @@ public class Chunk {
     public void updateTiles() {
         // TODO: Replace with single query
         int changed = 0;
+        int volatilityLimit = 50;
         
         for (int x = 0; x < height; x++) {
             List<Tile> row = tiles.get(x);
@@ -57,7 +58,7 @@ public class Chunk {
             for (int y = 0; y < width; y++) {
                 Tile tile = new Tile(new Point(this.topLeft.getX() + x, this.topLeft.getY() + y));
                 
-                if(changed < 100) {
+                if(changed < volatilityLimit) {
                     if(tile.updateData()){
                         changed++;
                     }

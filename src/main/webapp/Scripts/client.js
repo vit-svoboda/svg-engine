@@ -39,21 +39,21 @@ define(['jquery', 'engine'], function($, Engine) {
                 createUi: function(context) {
                     var ui = context.foreignObject(150,600),
                         speed = 100,
-                        toolbar = $('<div style="background-color:LightSteelBlue;padding:5px"></div>'),
-                        up = $('<button type="button">UP</button>').click(function(e) {
+                        toolbar = $('<div class="menu"></div>'),
+                        up = $('<button type="button" class="arrow up" alt="Up">&#8593;</button>').click(function(e) {
                             engine.move(0, -speed);
                         }),
-                        down = $('<button type="button">DOWN</button>').click(function(e) {
+                        down = $('<button type="button" class="arrow down" alt="Down">&#8595;</button>').click(function(e) {
                             engine.move(0, speed);
                         }),
-                        left = $('<button type="button">LEFT</button>').click(function(e) {
+                        left = $('<button type="button" class="arrow left" alt="Left">&#8592;</button>').click(function(e) {
                             engine.move(-speed, 0);
                         }),
-                        right = $('<button type="button">RIGHT</button>').click(function(e) {
+                        right = $('<button type="button" class="arrow right" alt="Right">&#8594;</button>').click(function(e) {
                             engine.move(speed, 0);
                         });
                         
-                    toolbar.append(up, down, left, right);
+                    toolbar.append(left, up, down, right);
                     $(ui.node).append(toolbar);
                     
                     ui.move(context.width() - ui.width() - 30, 30);
