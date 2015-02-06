@@ -27,18 +27,26 @@ define(['engine', 'point'], function (Engine, Point) {
                 
                 engine.updateTile(changedTileData);
                 expect(engine.drawTile).toHaveBeenCalled();
+                
                 done();
             });
 
             describe('Even when the screen has been moved.', function () {
         
                 beforeAll(function () {
+                    jasmine.clock().install();
+                    
                     engine.move(500, 0);
+                    
+                    jasmine.clock().tick(200);
+                    jasmine.clock().uninstall();
                 });
         
                 it('Does not update a tile when it is outside of the screen.', function (done) {
                     engine.updateTile(tileData);
+                    
                     expect(engine.drawTile).not.toHaveBeenCalled();
+                    
                     done();
                 });
 
@@ -46,7 +54,9 @@ define(['engine', 'point'], function (Engine, Point) {
                     var anotherTileData = {position: engine.camera.getOriginalCoordinates(500, 0), content: 0};
                     
                     engine.updateTile(anotherTileData);
+                    
                     expect(engine.drawTile).toHaveBeenCalled();
+                    
                     done();
                 });
             });

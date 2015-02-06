@@ -9,6 +9,11 @@ define(['camera', 'point'], function (Camera, Point) {
                 camera = new Camera(new Point(0, 0), 1);
                 camera.resizeViewport(new Point(1, 1));
             });
+            
+            it('Handles null input.', function(done) {
+               expect(camera.showTile(null)).toBeUndefined();
+               done();
+            });            
 
             it('Shows tiles within viewport.', function (done) {
 

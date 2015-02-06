@@ -1,4 +1,4 @@
-define(function () {
+define(['point'], function (Point) {
     'use strict';
 
     function DataCache() {
@@ -38,6 +38,43 @@ define(function () {
     };
 
     // TODO: Make sure the cache doesn't grow too large when moving around the 'infinite' map.
+    DataCache.prototype.clear = function (detectGarbage, deleteData) {
+
+        var row, item,
+            x, y,
+            itemCount;
+    
+        for (y in this.cache) {
+            if (this.cache.hasOwnProperty(y)) {
+                row = this.cache[y];
+
+                itemCount = 0;
+
+                for (x in row) {
+                    if (row.hasOwnProperty(x)) {
+                        item = row[x];
+
+                        itemCount++;
+
+                        if (detectGarbage(item.tile)) {
+
+                            if (deleteData) {
+                                itemCount--;
+                                delete row[x];
+                            } else {
+                                item.tile.remove();
+                                delete item.tile;
+                            }
+                        }
+                    }
+                }
+
+                if (itemCount === 0) {
+                    delete this.cache[y];
+                }
+            }
+        }
+    };
 
     return DataCache;
 });

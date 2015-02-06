@@ -117,6 +117,8 @@ define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.til
                 this.updateTile(data.tiles[x][y], tileSize);
             }
         }
+        
+        console.log('Tiles drawn: ' + this.tiles.children().length);
     };
 
     /**
@@ -131,26 +133,10 @@ define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.til
         if (!this.lastUpdate || timestamp - this.lastUpdate > this.refreshSpeed) {
             this.lastUpdate = timestamp;
             
-            var xmlHttp = new XMLHttpRequest();
-
-            xmlHttp.onreadystatechange = (function(that) {
-                return function() {
-                    if ((this.readyState === 4) && (this.status === 200)) {
-                        var data = JSON.parse(this.responseText);
-                        that.redraw(data);
-                    }
-                };
-            })(this);
-
             try {
-                // Request data surrounding the current camera position
-                var screen = this.camera.getScreenOuterBounds();
-
-                xmlHttp.open('GET', this.controller.serverUrl + '/tiles/' + screen.join(), true);
-                xmlHttp.setRequestHeader('Content-type', 'application/json');
-                xmlHttp.send();
-            }
-            catch (error) {
+                // Never request server URL directly, it's the controller's responsibility.
+                this.controller.getData(this.camera.getScreenOuterBounds());
+            } catch (error) {
                 console.log(error);
             }
         } else {
@@ -182,12 +168,24 @@ define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.til
 
 
     Engine.prototype.move = function(xDiff, yDiff) {
-        this.tiles.animate(200).move(this.tiles.x() + -xDiff, this.tiles.y() + -yDiff);
+        
+        var camera = this.camera,
+            tileSize = camera.getTileSize(),
+            moveAnimationSpeed = 200;
 
-        this.camera.move(xDiff, yDiff);
-
-        //TODO: Get rid of those outside screen.
-        //TODO: Fetch new in screen from cache.
+        this.tiles.animate(moveAnimationSpeed)
+                  .move(this.tiles.x() + -xDiff, this.tiles.y() + -yDiff);        
+        
+        setTimeout(function() {
+            camera.move(xDiff, yDiff);
+            
+            // Get rid of those outside screen.
+            this.cache.clear(function(tile) {
+                return tile && !camera.showTile(tile.center, tileSize);
+            });
+        }.bind(this), moveAnimationSpeed);
+        
+        //TODO: Fetch new in screen from cache.        
     };
 
     return Engine;

@@ -5,6 +5,29 @@ define(['jquery', 'engine'], function($, Engine) {
         $(document).ready(function() {
             var controller = {
                 serverUrl: 'data',
+                
+                getData: function (range) {
+                    var xmlHttp = new XMLHttpRequest(),
+                        client = this;
+                    
+                    xmlHttp.onreadystatechange = function() {
+                        if ((this.readyState === 4) && (this.status === 200)) {
+                            var data = JSON.parse(this.responseText);
+                            client.processData(data);
+                        }
+                    };
+
+                    // Request data surrounding the current camera position
+                    xmlHttp.open('GET', this.serverUrl + '/tiles/' + range.join(), true);
+                    xmlHttp.setRequestHeader('Content-type', 'application/json');
+                    xmlHttp.send();
+                },
+                processData: function (data) {
+                    
+                    // Possible to post-process the obtained data here.
+                    
+                    engine.redraw(data);
+                },
                 createTile: function(context, content) {   
                     switch(content) {
                         case 1:

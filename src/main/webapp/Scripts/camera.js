@@ -83,21 +83,23 @@ define(['point'], function (Point) {
     };
 
     Camera.prototype.showTile = function (center, tileSize) {
-        var ss = this.screenSize,
-            ts = tileSize || this.getTileSize(),
-            p = this.moveTransform;
+        if (center) {
+            var ss = this.screenSize,
+                ts = tileSize || this.getTileSize(),
+                p = this.moveTransform;
 
-        return center.x >= p.x - ts.width
-            && center.x <= p.x + ss.x + ts.width
-            && center.y >= p.y - ts.height
-            && center.y <= p.y + ss.y + ts.height;
+            return center.x >= p.x - ts.width
+                    && center.x <= p.x + ss.x + ts.width
+                    && center.y >= p.y - ts.height
+                    && center.y <= p.y + ss.y + ts.height;
+        }
     };
 
     Camera.prototype.move = function (xDiff, yDiff) {
         var logicalDiff = this.getOriginalCoordinates(xDiff, yDiff, true);
 
         this.position = new Point(this.position.x + logicalDiff.x, this.position.y + logicalDiff.y);
-        
+
         this.moveTransform.x += xDiff;
         this.moveTransform.y += yDiff;
     };
