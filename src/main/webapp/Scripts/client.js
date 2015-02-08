@@ -86,6 +86,8 @@ define(['jquery', 'engine'], function($, Engine) {
             },
             engine = new Engine($('#viewport'), controller);
             
+            engine.showFPS = true;
+            
             // Load assets
             engine.spritesheet.load('Images/tiles.png', 500, 150);
             engine.spritesheet.define('sand', 0, 0, 5);

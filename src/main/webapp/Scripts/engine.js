@@ -25,6 +25,13 @@ define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.til
 
             // Information about actually drawn field of view.
             this.tiles = this.context.group();
+            
+            this.lastUpdate = 0;
+            
+            this.showFPS = false;
+            this.lastFrame = 0;            
+            this.fpsSum = 0;
+            this.fpsCount = 0;
 
             this.resize(container);
         } else {
@@ -129,8 +136,12 @@ define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.til
     Engine.prototype.updateAsync = function(timestamp) {
         requestAnimationFrame(this.updateAsync.bind(this));
 
+        if (this.showFPS) {
+            this.updateFPS(timestamp);
+        }
+
         // Don't bother server on every frame render.
-        if (!this.lastUpdate || timestamp - this.lastUpdate > this.refreshSpeed) {
+        if (timestamp - this.lastUpdate > this.refreshSpeed) {
             this.lastUpdate = timestamp;
             
             try {
@@ -186,6 +197,25 @@ define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.til
         }.bind(this), moveAnimationSpeed);
         
         //TODO: Fetch new in screen from cache.        
+    };
+    
+    
+    /**
+     * Draws average FPS in the top left corner.
+     * 
+     * @param {type} timestamp passed by requestAnimationFrame callback.
+     */
+    Engine.prototype.updateFPS = function(timestamp) {
+        this.fpsSum += 1000 / (timestamp - this.lastFrame);
+        this.lastFrame = timestamp;
+        this.fpsCount++;
+        
+        var text = (this.fpsSum / this.fpsCount).toFixed(2) + ' FPS';
+        if (!this.fps) {
+            this.fps = this.context.text(text);
+        } else {
+            this.fps.text(text);
+        }
     };
 
     return Engine;
