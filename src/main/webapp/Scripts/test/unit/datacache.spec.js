@@ -18,9 +18,9 @@ define(['datacache', 'point'], function (DataCache, Point) {
             
             it('Obtains correct values.', function (done) {
 
-                expect(cache.get(new Point(0, 0))).toEqual({ content: 0, tile: undefined });                
+                expect(cache.get(new Point(0, 0))).toEqual({ content: 0, tile: undefined });
                 expect(cache.get(secondPosition)).toEqual({ content: 1, tile: { center: secondPosition } });
-                expect(cache.get(thirdPosition)).toEqual({ content: 1000, tile: null });                
+                expect(cache.get(thirdPosition)).toEqual({ content: 1000, tile: null });
 
                 done();
             });
@@ -35,6 +35,55 @@ define(['datacache', 'point'], function (DataCache, Point) {
             });
         });
         
+        
+        describe('DataCache can handle negative coordinates.', function () {
+            
+            it('Translates integers to non-negative ones.', function (done) {
+                var cache = new DataCache();
+                
+                expect(cache.coordinateToIndex(0)).toEqual(0);
+                expect(cache.coordinateToIndex(1)).toEqual(2);
+                expect(cache.coordinateToIndex(2)).toEqual(4);
+                expect(cache.coordinateToIndex(3)).toEqual(6);
+                expect(cache.coordinateToIndex(4)).toEqual(8);
+                expect(cache.coordinateToIndex(5)).toEqual(10);
+                
+                expect(cache.coordinateToIndex(-1)).toEqual(1);
+                expect(cache.coordinateToIndex(-2)).toEqual(3);
+                expect(cache.coordinateToIndex(-3)).toEqual(5);
+                expect(cache.coordinateToIndex(-4)).toEqual(7);
+                expect(cache.coordinateToIndex(-5)).toEqual(9);
+                
+                expect(cache.coordinateToIndex(10000)).toEqual(20000);
+                expect(cache.coordinateToIndex(-10000)).toEqual(19999);
+                
+                done();
+            });
+            
+            
+            it('Seemlesly hides the index translation to the caller.', function (done) {
+               var cache = new DataCache();
+               
+               cache.set(new Point(0, 0), 'Zero center');
+               cache.set(new Point(-1, -1), 'All negative');
+               cache.set(new Point(-1, 2), 'First negative');
+               cache.set(new Point(3, -2), 'Latter negative');
+               cache.set(new Point(1, 4), 'Both positive');
+               
+               expect(cache.get(new Point(0, 0)).content).toEqual('Zero center');
+               expect(cache.get(new Point(-1, -1)).content).toEqual('All negative');
+               expect(cache.get(new Point(-1, 2)).content).toEqual('First negative');
+               expect(cache.get(new Point(3, -2)).content).toEqual('Latter negative');
+               expect(cache.get(new Point(1, 4)).content).toEqual('Both positive');
+               
+               cache.set(new Point(-1, -1), 'Updated');
+               
+               expect(cache.get(new Point(-1, -1)).content).toEqual('Updated');
+               
+               done();
+            });
+        });
+            
         describe('DataCache can limit data growth.', function () {
             
             var cache,

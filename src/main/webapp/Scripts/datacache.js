@@ -14,9 +14,9 @@ define(['point'], function (Point) {
      */
     DataCache.prototype.get = function (coordinates) {
         if (coordinates) {
-            var row = this.cache[coordinates.x];
+            var row = this.cache[this.coordinateToIndex(coordinates.x)];
             if (row) {
-                return row[coordinates.y];
+                return row[this.coordinateToIndex(coordinates.y)];
             }
         }
     };
@@ -29,51 +29,61 @@ define(['point'], function (Point) {
      * @param {SVGElement} tile Tile element reference
      */
     DataCache.prototype.set = function (coordinates, content, tile) {
-        var row = this.cache[coordinates.x];
+        var xIndex = this.coordinateToIndex(coordinates.x),
+            row = this.cache[xIndex];
         if (!row) {
-            row = this.cache[coordinates.x] = [];
+            row = this.cache[xIndex] = [];
         }
 
-        row[coordinates.y] = {content: content, tile: tile};
+        row[this.coordinateToIndex(coordinates.y)] = {content: content, tile: tile};
     };
 
     // TODO: Make sure the cache doesn't grow too large when moving around the 'infinite' map.
     DataCache.prototype.clear = function (detectGarbage, deleteData) {
 
-        var row, item,
-            x, y,
-            itemCount;
+        var itemCount;
     
-        for (y in this.cache) {
-            if (this.cache.hasOwnProperty(y)) {
-                row = this.cache[y];
+        this.cache.forEach(function(row, y) {
+            itemCount = 0;
 
-                itemCount = 0;
+            row.forEach(function(item, x) {
+                
+                itemCount++;
 
-                for (x in row) {
-                    if (row.hasOwnProperty(x)) {
-                        item = row[x];
+                if (detectGarbage(item.tile)) {
 
-                        itemCount++;
-
-                        if (detectGarbage(item.tile)) {
-
-                            if (deleteData) {
-                                itemCount--;
-                                delete row[x];
-                            } else {
-                                item.tile.remove();
-                                delete item.tile;
-                            }
-                        }
+                    if (deleteData) {
+                        itemCount--;
+                        delete row[x];
+                    } else {
+                        item.tile.remove();
+                        delete item.tile;
                     }
+                
                 }
 
                 if (itemCount === 0) {
                     delete this.cache[y];
                 }
-            }
+            }, this);
+        }, this);
+    };
+    
+    
+    /*
+     * Translates positive coordinates to even numbers and negative coordinates to odd numbers.
+     * Just like both ends infinite touring machine tape.
+     * 
+     * @param {int} coordinate Logical data coordinate.
+     */
+    DataCache.prototype.coordinateToIndex = function (coordinate) {
+        
+        var index = coordinate * 2;        
+        if (coordinate < 0) {
+            index = -index - 1;
         }
+        
+        return index;
     };
 
     return DataCache;
