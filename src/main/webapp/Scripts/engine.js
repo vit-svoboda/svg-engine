@@ -5,10 +5,9 @@ define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.til
      * Engine module constructor.
      * 
      * @param {HTMLElement or jQuery object} container Engine will live inside this element.
-     * @param {Client} controller Game logic and data translation provider.
      * @param {number} refreshSpeed How often the screen should be updated.
      */
-    function Engine(container, controller, refreshSpeed) {
+    function Engine(container, refreshSpeed) {
         // Make sure container is jQuery object.
         container = $(container);
 
@@ -16,7 +15,6 @@ define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.til
             this.refreshSpeed = refreshSpeed || 200;
 
             this.context = SVG(container[0]);
-            this.controller = controller;
 
             // Information about logical field of view.
             this.camera = new Camera();//new Point(35.1, 16.7));
@@ -25,7 +23,7 @@ define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.til
 
             // Information about actually drawn field of view.
             this.tiles = this.context.group();
-            
+
             this.lastUpdate = 0;
             
             this.showFPS = false;
@@ -42,6 +40,19 @@ define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.til
         }
     }
     
+    /**
+     * Initializes the engine with given game implementation.
+     * 
+     * @param {Client} client Game data proxy.
+     * @param {AssetHandler} assetHandler Game data translation provider.
+     * @param {Controller} controller Game logic provider.
+     */
+    Engine.prototype.init = function (client, assetHandler, controller) {
+        this.client = client;
+        this.assetHandler = assetHandler;
+        this.controller = controller;
+    };
+    
     
     /**
      * Draws a tile on the screen.
@@ -53,7 +64,7 @@ define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.til
     Engine.prototype.drawTile = function(tileData, tileSize, center) {
                   
         // Draw the actual tile
-        var tile = this.controller.createTile(this.tiles, tileData.content);
+        var tile = this.assetHandler.createTile(this.tiles, tileData.content);
 
         tile.tile(tileSize);
                 
@@ -146,7 +157,7 @@ define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.til
             
             try {
                 // Never request server URL directly, it's the controller's responsibility.
-                this.controller.getData(this.camera.getScreenOuterBounds());
+                this.client.getData(this.camera.getScreenOuterBounds());
             } catch (error) {
                 console.log(error);
             }

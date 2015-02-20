@@ -1,4 +1,4 @@
-define(['point'], function (Point) {
+define(function () {
     'use strict';
 
     function DataCache() {
