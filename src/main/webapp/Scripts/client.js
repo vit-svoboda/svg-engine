@@ -38,7 +38,7 @@ define(['jquery', 'engine'], function($, Engine) {
                             
                         case 3:
                             return context.sprite(engine.spritesheet.get('concrete'));
-                            
+ 
                         default:
                             return context.polygon().attr('class', 'Tile');
                     }
@@ -89,10 +89,21 @@ define(['jquery', 'engine'], function($, Engine) {
             engine.showFPS = true;
             
             // Load assets
-            engine.spritesheet.load('Images/tiles.png', 500, 150);
-            engine.spritesheet.define('sand', 0, 0, 5);
-            engine.spritesheet.define('grass', 0, 50, 3, 200);
-            engine.spritesheet.define('concrete', 0, 100);
+            var regex = new RegExp('[\\?&]spriteMode=([^&#]*)'),
+                results = regex.exec(location.search),
+                mode = results ? decodeURIComponent(results[1].replace(/\+/g, " ")) : null;
+            
+            if(mode === 'gif') {
+                engine.spritesheet.load('Images/tiles.gif', 100, 150);
+                engine.spritesheet.define('sand', 0, 0);
+                engine.spritesheet.define('grass', 0, 50);
+                engine.spritesheet.define('concrete', 0, 100);
+            } else {
+                engine.spritesheet.load('Images/tiles.png', 500, 150);
+                engine.spritesheet.define('sand', 0, 0, 5);
+                engine.spritesheet.define('grass', 0, 50, 3, 200);
+                engine.spritesheet.define('concrete', 0, 100);
+            }
             
             engine.run();
         });

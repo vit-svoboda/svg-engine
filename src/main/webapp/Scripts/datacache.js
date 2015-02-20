@@ -58,8 +58,7 @@ define(['point'], function (Point) {
                     } else {
                         item.tile.remove();
                         delete item.tile;
-                    }
-                
+                    }                
                 }
 
                 if (itemCount === 0) {
