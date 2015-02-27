@@ -4,29 +4,30 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- *
+ * Chunk provider allows to retrieve chunks of tile content data.
+ * 
  * @author vit
  */
-public class Chunk {
-
-    private Point topLeft;
-    private List<List<Tile>> tiles;
+public class ChunkProvider {
     
-    private int width;
-    private int height;
+    private static Point previousRequest;
+    private final static int VOLATILITY_LIMIT = 50;
+    
+    private final Point topLeft;  
+    private final List<List<Tile>> tiles;
+    
+    private final int width;
+    private final int height;
 
-    public Chunk() {
-    }
-
-    public Chunk(Point topLeft, int width, int height) {
-        setTopLeft(topLeft);
+    public ChunkProvider(Point topLeft, int width, int height) {
         
+        this.topLeft = topLeft;        
         this.width = width;
         this.height= height;
         
-        setTiles(new ArrayList<List<Tile>>(height));
+        tiles = new ArrayList<>(height);
         
-        for(int i = 0; i< height; i++){
+        for(int i = 0; i < height; i++){
             tiles.add(new ArrayList<Tile>(width));
         }        
     }
@@ -34,38 +35,39 @@ public class Chunk {
     public Point getTopLeft() {
         return topLeft;
     }
-    
-    private void setTopLeft(Point topLeft){
-        this.topLeft = topLeft;
-    }
-    
+
     public List<List<Tile>> getTiles() {
         return tiles;
     }
-    
-    private void setTiles(List<List<Tile>> tiles){
-        this.tiles = tiles;
-    }
 
-    public void updateTiles() {
-        // TODO: Replace with single query
-        int changed = 0;
-        int volatilityLimit = 50;
+    public Object createChunk() {
         
-        for (int x = 0; x < height; x++) {
-            List<Tile> row = tiles.get(x);
+        List<Tile> changedTiles = new ArrayList<>(VOLATILITY_LIMIT);
+        
+        boolean getFullResponse = !topLeft.equals(previousRequest);
+        
+        previousRequest = topLeft;
+        
+        for (int y = 0; y < height; y++) {
+            List<Tile> row = tiles.get(y);
             
-            for (int y = 0; y < width; y++) {
+            for (int x = 0; x < width; x++) {
                 Tile tile = new Tile(new Point(this.topLeft.getX() + x, this.topLeft.getY() + y));
                 
-                if(changed < volatilityLimit) {
-                    if(tile.updateData()){
-                        changed++;
+                if (changedTiles.size() < VOLATILITY_LIMIT) {
+                    if (tile.updateData()){
+                        changedTiles.add(tile);
                     }
                 }
 
                 row.add(tile);
             }
+        }
+        
+        if (getFullResponse) {
+            return new ContinuousChunk(this);
+        } else {
+            return new SparseChunk(changedTiles);
         }
     }
 }

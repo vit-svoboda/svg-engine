@@ -11,26 +11,29 @@ import java.util.Random;
 public class Tile {
 
     private static final Random RNG = new Random();
-    private static HashMap<Point, Integer> serverCache = new HashMap<>();
+    private static final HashMap<Point, Integer> serverCache = new HashMap<>();
     
     private Point position;
     private int content;
 
-    public Tile() {
-    }
-
     /**
-     * Initializes the position of the tile.
+     * Initializes the tile.
      *
      * @param position position of the tile.
      */
     public Tile(Point position) {
         setPosition(position);
+        
+        // Initialize the random content
+        Integer data = serverCache.get(position);
+        if (data == null) {
+            data = RNG.nextInt(4);
+        }
+        setContent(data);        
     }
 
     /**
-     * Get position of the tile. TODO: how are the coordinates organized? Where
-     * is 0:0?
+     * Get position of the tile.
      *
      * @return position of the tile.
      */
@@ -43,18 +46,11 @@ public class Tile {
     }
 
     /**
-     * Gets the data describing what is on the tile. TODO: Enumeration? String
-     * sprite identifier?
+     * Gets the data describing what is on the tile.
      *
      * @return data describing of the tile content.
      */
     public int getContent() {
-        Integer data = serverCache.get(position);
-        if(data == null){
-            data = RNG.nextInt(4);
-        }
-        setContent(data);
-        
         return content;
     }
 

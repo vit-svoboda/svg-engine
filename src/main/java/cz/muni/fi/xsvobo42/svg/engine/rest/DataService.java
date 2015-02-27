@@ -1,6 +1,6 @@
 package cz.muni.fi.xsvobo42.svg.engine.rest;
 
-import cz.muni.fi.xsvobo42.svg.engine.model.Chunk;
+import cz.muni.fi.xsvobo42.svg.engine.model.ChunkProvider;
 import cz.muni.fi.xsvobo42.svg.engine.model.Point;
 import cz.muni.fi.xsvobo42.svg.engine.model.Tile;
 import javax.ws.rs.GET;
@@ -40,7 +40,7 @@ public class DataService {
     @GET
     @Path("{x},{y},{x1},{y1}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Chunk getTiles(@PathParam("x") int x, @PathParam("y") int y, @PathParam("x1") int x1, @PathParam("y1") int y1) {
+    public Object getTiles(@PathParam("x") int x, @PathParam("y") int y, @PathParam("x1") int x1, @PathParam("y1") int y1) {
         int width = x1 - x;
         int height = y1 - y;
 
@@ -48,9 +48,8 @@ public class DataService {
             throw new WebApplicationException("invalid area");
         }
 
-        Chunk chunk = new Chunk(new Point(x, y), width, height);
-        chunk.updateTiles();
-
-        return chunk;
+        ChunkProvider provider = new ChunkProvider(new Point(x, y), width, height);
+        
+        return provider.createChunk();
     }
 }

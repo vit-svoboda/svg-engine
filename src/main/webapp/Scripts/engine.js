@@ -1,4 +1,4 @@
-define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.tile', 'svg.foreignobject'], function($, Point, DataCache, Camera, SpriteSheet, SVG) {
+define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.tile', 'svg.foreignobject'], function ($, Point, DataCache, Camera, SpriteSheet, SVG) {
     'use strict';
 
     /**
@@ -25,21 +25,21 @@ define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.til
             this.tiles = this.context.group();
 
             this.lastUpdate = 0;
-            
+
             this.showFPS = false;
-            this.lastFrame = 0;            
+            this.lastFrame = 0;
             this.fpsSum = 0;
             this.fpsCount = 0;
 
             this.resize(container);
         } else {
             // If SVG is not supported, disable engine run.
-            this.run = function() {
+            this.run = function () {
                 container.append('<span>SVG is not supported in this browser.</span>');
             };
         }
     }
-    
+
     /**
      * Initializes the engine with given game implementation.
      * 
@@ -52,90 +52,104 @@ define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.til
         this.assetHandler = assetHandler;
         this.controller = controller;
     };
-    
-    
+
+
     /**
      * Draws a tile on the screen.
      * 
-     * @param {type} tileData containing logical coordinates and tile content.
+     * @param {Object} content Content of the tile.
+     * @param {Point} position Tile logical coordinates.
      * @param {type} tileSize size of the tile on screen.
      * @param {Point} center of the tile on the screen.
      */
-    Engine.prototype.drawTile = function(tileData, tileSize, center) {
-                  
+    Engine.prototype.drawTile = function (content, position, tileSize, center) {
+
         // Draw the actual tile
-        var tile = this.assetHandler.createTile(this.tiles, tileData.content);
+        var tile = this.assetHandler.createTile(this.tiles, content);
 
         tile.tile(tileSize);
-                
-        tile.coordinates = tileData.position;
+
+        tile.coordinates = position;
         tile.center = center;
 
         // Add user controls handlers.
         tile.click(this.controller.onClick);
-                        
+
         // Move operates with top left corner, while my center is tile center.
         tile.move(center.x - tileSize.width / 2, center.y - tileSize.height / 2);
 
         // TODO: Reorder all tiles infront of this one on the z-index
-            
+
         return tile;
     };
-    
-    
+
+
     /**
      * Updates data cache and if the tile needs to be redrawn, returns its coordinates on screen.
      * 
-     * @param {type} tileData containing logical coordinates and tile content.
-     * @param {type} tileSize tileSize is optionally passed in to prevent recalculation for each updated tile and hence improve performance.
+     * @param {Object} tileContent  Content of the tile.
+     * @param {Point}  tilePosition Logical coordinates of the tile.
+     * @param {Object} tileSize tileSize is optionally passed in to prevent recalculation for each updated tile and hence improve performance.
      */
-    Engine.prototype.updateTile = function(tileData, tileSize) {
-        var oldTile = this.cache.get(tileData.position),
+    Engine.prototype.updateTile = function (tileContent, tilePosition, tileSize) {
+        var oldTile = this.cache.get(tilePosition),
             center,
             tile;
 
         // Do something only if the tile changed
-        if (!oldTile || !oldTile.tile || oldTile.content !== tileData.content) {
+        if (!oldTile || !oldTile.tile || oldTile.content !== tileContent) {
 
             // Reuse old coordinates if possible, otherwise calculate new
             if (oldTile && oldTile.tile) {
                 center = oldTile.tile.center;
-                
+
                 // Remove the original tile
                 oldTile.tile.remove();
             } else {
-                center = this.camera.getIsometricCoordinates(tileData.position);
+                center = this.camera.getIsometricCoordinates(tilePosition);
             }
 
             tileSize = tileSize || this.camera.getTileSize();
 
             // Skip tiles that would end up out of the screen
             if (this.camera.showTile(center, tileSize)) {
-                tile = this.drawTile(tileData, tileSize, center);
+                tile = this.drawTile(tileContent, tilePosition, tileSize, center);
             }
-            
+
             // Update the data cache
-            this.cache.set(tileData.position, tileData.content, tile);
+            this.cache.set(tilePosition, tileContent, tile);
         }
     };
-    
+
 
     /**
      * Updates the screen with tiles based on given data.
      * 
      * @param {Chunk} data Fresh data for the screen
      */
-    Engine.prototype.redraw = function(data) {
-        var dimension = new Point(data.tiles.length, data.tiles[0].length),
-            tileSize = this.camera.getTileSize(),
-            x, y;
-
-        for (x = 0; x < dimension.x; x++) {
-            for (y = 0; y < dimension.y; y++) {
-                this.updateTile(data.tiles[x][y], tileSize);
-            }
-        }
+    Engine.prototype.redraw = function (data) {
+        var tileSize = this.camera.getTileSize();
         
+        if (data && data.tiles) {
+            data.tiles.forEach(function (tileData, y) {
+                if (tileData.forEach) {
+                    
+                    // Full update mode
+                    tileData.forEach(function (tile, x) {
+
+                        // TODO: This probably should be responsibility of the client module
+                        var position = new Point(data.topLeft.x + x, data.topLeft.y + y);
+                        
+                        this.updateTile(tile, position, tileSize);
+                    }, this);
+                } else {
+                    
+                    // Diff update mode
+                    this.updateTile(tileData.content, tileData.position, tileSize);
+                }
+            }, this);
+        }
+
         console.log('Tiles drawn: ' + this.tiles.children().length);
     };
 
@@ -144,7 +158,7 @@ define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.til
      * 
      * @param {DOMHighResTimeStamp} timestamp from the beginning of the animation. In miliseconds, but with decimal precision to 10 microseconds. 
      */
-    Engine.prototype.updateAsync = function(timestamp) {
+    Engine.prototype.updateAsync = function (timestamp) {
         requestAnimationFrame(this.updateAsync.bind(this));
 
         if (this.showFPS) {
@@ -154,7 +168,7 @@ define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.til
         // Don't bother server on every frame render.
         if (timestamp - this.lastUpdate > this.refreshSpeed) {
             this.lastUpdate = timestamp;
-            
+
             try {
                 // Never request server URL directly, it's the controller's responsibility.
                 this.client.getData(this.camera.getScreenOuterBounds());
@@ -162,8 +176,6 @@ define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.til
                 console.log(error);
             }
         } else {
-            //TODO: Only handle animations and I/O.
-
             this.spritesheet.animateSprites(timestamp);
         }
     };
@@ -171,8 +183,8 @@ define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.til
     /**
      * Launches the engine update loop. 
      */
-    Engine.prototype.run = function() {
-        this.lastUpdate = null;                                              
+    Engine.prototype.run = function () {
+        this.lastUpdate = null;
 
         requestAnimationFrame(this.updateAsync.bind(this));
 
@@ -180,7 +192,7 @@ define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.til
     };
 
 
-    Engine.prototype.resize = function(container) {
+    Engine.prototype.resize = function (container) {
         var c = $(container),
             size = new Point(c.innerWidth(), c.innerHeight());
 
@@ -189,38 +201,38 @@ define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.til
     };
 
 
-    Engine.prototype.move = function(xDiff, yDiff) {
-        
+    Engine.prototype.move = function (xDiff, yDiff) {
+
         var camera = this.camera,
             tileSize = camera.getTileSize(),
             moveAnimationSpeed = 200;
 
         this.tiles.animate(moveAnimationSpeed)
-                  .move(this.tiles.x() + -xDiff, this.tiles.y() + -yDiff);        
-        
-        setTimeout(function() {
+                  .move(this.tiles.x() + -xDiff, this.tiles.y() + -yDiff);
+
+        setTimeout(function () {
             camera.move(xDiff, yDiff);
-            
+
             // Get rid of those outside screen.
-            this.cache.clear(function(tile) {
+            this.cache.clear(function (tile) {
                 return tile && !camera.showTile(tile.center, tileSize);
             });
         }.bind(this), moveAnimationSpeed);
-        
+
         //TODO: Fetch new in screen from cache.        
     };
-    
-    
+
+
     /**
      * Draws average FPS in the top left corner.
      * 
      * @param {type} timestamp passed by requestAnimationFrame callback.
      */
-    Engine.prototype.updateFPS = function(timestamp) {
+    Engine.prototype.updateFPS = function (timestamp) {
         this.fpsSum += 1000 / (timestamp - this.lastFrame);
         this.lastFrame = timestamp;
         this.fpsCount++;
-        
+
         var text = (this.fpsSum / this.fpsCount).toFixed(2) + ' FPS';
         if (!this.fps) {
             this.fps = this.context.text(text);
