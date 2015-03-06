@@ -53,6 +53,83 @@ define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.til
         this.controller = controller;
     };
 
+    /**
+     * Launches the engine update loop. 
+     */
+    Engine.prototype.run = function () {
+        this.lastUpdate = null;
+
+        requestAnimationFrame(this.updateAsync.bind(this));
+
+        this.ui = this.controller.createUi(this.context);
+    };
+    
+    /**
+     * Updates the screen with tiles based on given data.
+     * 
+     * @param {Chunk} data Fresh data for the screen
+     */
+    Engine.prototype.redraw = function (data) {
+        var tileSize = this.camera.getTileSize();
+        
+        if (data && data.tiles) {
+            data.tiles.forEach(function (tileData, y) {
+                if (tileData.forEach) {
+                    
+                    // Full update mode
+                    tileData.forEach(function (tile, x) {
+
+                        // TODO: This probably should be responsibility of the client module
+                        var position = new Point(data.topLeft.x + x, data.topLeft.y + y);
+                        
+                        this.updateTile(tile, position, tileSize);
+                    }, this);
+                } else {
+                    
+                    // Diff update mode (position object obtained is missing Point logic).
+                    this.updateTile(tileData.content, new Point(tileData.position.x, tileData.position.y), tileSize);
+                }
+            }, this);
+        }
+
+        console.log('Tiles drawn: ' + this.tiles.children().length);
+    };
+
+    /**
+     * Runs controller callback handling detailed data.
+     * 
+     * @param {Object} tileData Detailed data obtained from client.
+     */
+    Engine.prototype.processDetailedData = function (tileData) {
+        this.controller.processDetailedData(this.context, tileData);
+    };
+    
+    /**
+     * Moves camera by given difference.
+     * 
+     * @param {number} xDiff Screen pixels horizontally.
+     * @param {number} yDiff Screen pixels vertically.
+     */
+    Engine.prototype.move = function (xDiff, yDiff) {
+
+        var camera = this.camera,
+            tileSize = camera.getTileSize(),
+            moveAnimationSpeed = 200;
+
+        this.tiles.animate(moveAnimationSpeed)
+                  .move(this.tiles.x() + -xDiff, this.tiles.y() + -yDiff);
+
+        setTimeout(function () {
+            camera.move(xDiff, yDiff);
+
+            // Get rid of those outside screen.
+            this.cache.clear(function (tile) {
+                return tile && !camera.showTile(tile.center, tileSize);
+            });
+        }.bind(this), moveAnimationSpeed);
+
+        //TODO: Fetch new in screen from cache.        
+    };    
 
     /**
      * Draws a tile on the screen.
@@ -71,6 +148,9 @@ define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.til
 
         tile.coordinates = position;
         tile.center = center;
+        
+        // So that engine is available in UI handlers.
+        tile.engine = this;
 
         // Add user controls handlers.
         tile.click(this.controller.onClick);
@@ -82,7 +162,6 @@ define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.til
 
         return tile;
     };
-
 
     /**
      * Updates data cache and if the tile needs to be redrawn, returns its coordinates on screen.
@@ -121,38 +200,6 @@ define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.til
         }
     };
 
-
-    /**
-     * Updates the screen with tiles based on given data.
-     * 
-     * @param {Chunk} data Fresh data for the screen
-     */
-    Engine.prototype.redraw = function (data) {
-        var tileSize = this.camera.getTileSize();
-        
-        if (data && data.tiles) {
-            data.tiles.forEach(function (tileData, y) {
-                if (tileData.forEach) {
-                    
-                    // Full update mode
-                    tileData.forEach(function (tile, x) {
-
-                        // TODO: This probably should be responsibility of the client module
-                        var position = new Point(data.topLeft.x + x, data.topLeft.y + y);
-                        
-                        this.updateTile(tile, position, tileSize);
-                    }, this);
-                } else {
-                    
-                    // Diff update mode
-                    this.updateTile(tileData.content, tileData.position, tileSize);
-                }
-            }, this);
-        }
-
-        console.log('Tiles drawn: ' + this.tiles.children().length);
-    };
-
     /**
      * Requests data update from the server and when it's delivered, redraws the screen.
      * 
@@ -180,18 +227,6 @@ define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.til
         }
     };
 
-    /**
-     * Launches the engine update loop. 
-     */
-    Engine.prototype.run = function () {
-        this.lastUpdate = null;
-
-        requestAnimationFrame(this.updateAsync.bind(this));
-
-        this.ui = this.controller.createUi(this.context);
-    };
-
-
     Engine.prototype.resize = function (container) {
         var c = $(container),
             size = new Point(c.innerWidth(), c.innerHeight());
@@ -199,29 +234,6 @@ define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.til
         this.camera.resizeViewport(size);
         this.context.size(size.x, size.y);
     };
-
-
-    Engine.prototype.move = function (xDiff, yDiff) {
-
-        var camera = this.camera,
-            tileSize = camera.getTileSize(),
-            moveAnimationSpeed = 200;
-
-        this.tiles.animate(moveAnimationSpeed)
-                  .move(this.tiles.x() + -xDiff, this.tiles.y() + -yDiff);
-
-        setTimeout(function () {
-            camera.move(xDiff, yDiff);
-
-            // Get rid of those outside screen.
-            this.cache.clear(function (tile) {
-                return tile && !camera.showTile(tile.center, tileSize);
-            });
-        }.bind(this), moveAnimationSpeed);
-
-        //TODO: Fetch new in screen from cache.        
-    };
-
 
     /**
      * Draws average FPS in the top left corner.

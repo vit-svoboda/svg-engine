@@ -6,6 +6,7 @@ define(['jquery'], function ($) {
     
     function Controller(engine) {
         this.engine = engine;
+        this.dialogCount = 0;
     }    
     
     /**
@@ -16,17 +17,43 @@ define(['jquery'], function ($) {
      */
     Controller.prototype.onClick = function (e) {
         var tile = e.currentTarget.instance;
-        // Draw the flag
-        var center = tile.center;
-        console.log('Placing a flag to ' + center + '.');
-        var flag = tile.parent.polygon('0,0 0,-20 10,-15 0,-10').attr('class', 'Flag');
-        flag.move(center.x, center.y);
-        flag.click(function (e) {
-            $(e.currentTarget).remove();
-        });
+        
         // TODO: Actually on mouse down place there some temporary item, on mouse up make it permanent.
-        // TODO: Meanwhile ask server whether it can be there and if so, notify it.
-    };    
+        // Meanwhile ask server for detailed information.
+        tile.engine.client.getDetailedData(tile.coordinates);
+    };
+    
+    Controller.prototype.processDetailedData = function (context, tileData) {
+
+        // TODO: Store all UI in a single overlay foreignObject?
+        var controller = this,
+            ui = context.foreignObject(300, 300),
+            dialog = $('<div class="ui dialog"></div>'),
+            close = $('<button style="float:right;">X</button>').click(function (e) {
+                $(e.currentTarget).parent().parent().remove();
+                controller.dialogCount--;
+            }),
+            position = $('<span class="dialog-title">[' + tileData.position.x + ',' + tileData.position.y + ']</span>'),
+            desc = $('<span></span>').text(tileData.description),
+            resources,
+            dialogOffset = ++this.dialogCount * 30;
+    
+        dialog.append(position, close, desc);        
+        
+        if (tileData.resources) {
+            resources = $('<ul></ul>');
+            
+            $.each(tileData.resources, function(resource, amount) {
+                resources.append($('<li></li>').text(resource + ": " + amount));
+            });
+            
+            dialog.append(resources);
+        }
+        
+        $(ui.node).append(dialog);
+        
+        ui.move(dialogOffset, dialogOffset);
+    };
     
     /**
      * Creates the user interface for particular game implementation.
@@ -37,10 +64,10 @@ define(['jquery'], function ($) {
      */
     Controller.prototype.createUi = function (context) {
         
-        var ui = context.foreignObject(150, 600),
+        var ui = context.foreignObject(200, 600),
             engine = this.engine,
             speed = 100,
-            toolbar = $('<div class="menu"></div>'),
+            toolbar = $('<div class="ui"></div>'),
             up = $('<button type="button" class="arrow up" alt="Up">&#8593;</button>').click(function (e) {
                 engine.move(0, -speed);
             }),

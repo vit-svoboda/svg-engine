@@ -102,7 +102,7 @@ define(['engine', 'point'], function (Engine, Point) {
             });
             
             it('Handles diff update data.', function (done) {
-                engine.redraw({ tiles: [ { }, { }, { } ] });
+                engine.redraw({ tiles: [ { position: { } }, { position: { } }, { position: { } } ] });
                 
                 expect(engine.updateTile.calls.count()).toEqual(3);
                 

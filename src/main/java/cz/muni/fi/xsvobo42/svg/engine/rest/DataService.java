@@ -1,6 +1,7 @@
 package cz.muni.fi.xsvobo42.svg.engine.rest;
 
 import cz.muni.fi.xsvobo42.svg.engine.model.ChunkProvider;
+import cz.muni.fi.xsvobo42.svg.engine.model.FullTile;
 import cz.muni.fi.xsvobo42.svg.engine.model.Point;
 import cz.muni.fi.xsvobo42.svg.engine.model.Tile;
 import javax.ws.rs.GET;
@@ -31,7 +32,7 @@ public class DataService {
     public Tile getTile(@PathParam("x") int x, @PathParam("y") int y) {
         Point position = new Point(x, y);
 
-        Tile tile = new Tile(position);
+        Tile tile = new FullTile(position);
         tile.updateData();
 
         return tile;
