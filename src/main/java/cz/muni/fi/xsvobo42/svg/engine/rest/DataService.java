@@ -4,11 +4,14 @@ import cz.muni.fi.xsvobo42.svg.engine.model.ChunkProvider;
 import cz.muni.fi.xsvobo42.svg.engine.model.FullTile;
 import cz.muni.fi.xsvobo42.svg.engine.model.Point;
 import cz.muni.fi.xsvobo42.svg.engine.model.Tile;
+
 import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.MediaType;
 
 /**
@@ -41,7 +44,8 @@ public class DataService {
     @GET
     @Path("{x},{y},{x1},{y1}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Object getTiles(@PathParam("x") int x, @PathParam("y") int y, @PathParam("x1") int x1, @PathParam("y1") int y1) {
+    public Object getTiles(@PathParam("x") int x, @PathParam("y") int y, @PathParam("x1") int x1, @PathParam("y1") int y1,
+                           @HeaderParam("Cache-Control") String cacheControl) {
         int width = x1 - x;
         int height = y1 - y;
 
@@ -51,6 +55,12 @@ public class DataService {
 
         ChunkProvider provider = new ChunkProvider(new Point(x, y), width, height);
         
-        return provider.createChunk();
+        boolean allowPartialUpdate = false;
+        if (cacheControl != null) {
+            CacheControl cc = CacheControl.valueOf(cacheControl);
+            allowPartialUpdate = cc.getMaxAge() > 0;
+        }
+        
+        return provider.createChunk(allowPartialUpdate);
     }
 }

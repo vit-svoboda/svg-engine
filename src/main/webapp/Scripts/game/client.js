@@ -7,9 +7,15 @@ define(function () {
 
     function Client(engine) {
         this.serverUrl = 'data';
+        this.allowPartialUpdate = false;
         
         // If some data pre-processing is necessary, just wrap the redraw to a function that will do that.
-        this.processData = engine.redraw.bind(engine);
+        this.processData = function (data) {
+            
+            // Allow partial updates after the client has been initialized (server doesn't know about browser refreshes).
+            this.allowPartialUpdate = true;
+            engine.redraw(data); 
+        }.bind(this);
         this.processDetailedData = engine.processDetailedData.bind(engine);
     }    
     
@@ -26,6 +32,11 @@ define(function () {
         // Request data surrounding the current camera position
         xmlHttp.open('GET', this.serverUrl + '/tiles/' + argument, true);
         xmlHttp.setRequestHeader('Content-type', 'application/json');
+        
+        if(this.allowPartialUpdate) {
+            xmlHttp.setRequestHeader('Cache-Control', 'max-age=1');
+        }
+        
         xmlHttp.send();
     };
     

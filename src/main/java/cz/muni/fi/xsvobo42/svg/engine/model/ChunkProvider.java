@@ -40,11 +40,11 @@ public class ChunkProvider {
         return tiles;
     }
 
-    public Object createChunk() {
+    public Object createChunk(boolean allowPartialUpdate) {
         
         List<Tile> changedTiles = new ArrayList<>(VOLATILITY_LIMIT);
         
-        boolean getFullResponse = !topLeft.equals(previousRequest);
+        boolean getFullResponse = !allowPartialUpdate || !topLeft.equals(previousRequest);
         
         previousRequest = topLeft;
         
