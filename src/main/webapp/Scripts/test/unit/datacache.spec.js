@@ -84,7 +84,7 @@ define(['datacache', 'point'], function (DataCache, Point) {
             });
         });
             
-        describe('DataCache can limit data growth.', function () {
+        describe('DataCache can limit tile growth.', function () {
             
             var cache,
                 tileToBeRemoved = { isGarbage: true, remove: function() {} },
@@ -100,7 +100,7 @@ define(['datacache', 'point'], function (DataCache, Point) {
                 cache.set(new Point(1000, -1), 0, tileToBeRemoved);
             });
             
-            it ('Removes specified tiles on demand.', function (done) {
+            it('Removes specified tiles on demand.', function (done) {
                 cache.clear(function(tile) { return tile.isGarbage; });
                 
                 expect(tileToBeRemoved.remove).toHaveBeenCalled();
@@ -117,6 +117,32 @@ define(['datacache', 'point'], function (DataCache, Point) {
                 
                 expect(cache.get(new Point(1000, -1))).toBeUndefined();
                 expect(cache.cache.filter(function(v) { return v !== undefined; }).length).toEqual(1);
+                
+                done();
+            });
+        });
+        
+        describe('DataCache can limit data growth.', function () {
+            it('Can collect and take out garbage.', function (done) {
+                var cache = new DataCache(1),
+                    coordinates = new Point(1, 1);                    
+                
+                cache.set(coordinates, 1);
+                
+                expect(cache.getFromDataSet(coordinates, cache.cache).content).toEqual(1);
+                
+                cache.set(new Point(1, 2), 2);
+                
+                cache.collectGarbage();
+                
+                expect(cache.getFromDataSet(coordinates, cache.cache)).toBeUndefined();
+                expect(cache.get(coordinates).content).toEqual(1);
+                
+                cache.set(coordinates, 3);
+                
+                expect(cache.getFromDataSet(coordinates, cache.cache).content).toEqual(3);
+                expect(cache.getFromDataSet(coordinates, cache.garbage).content).toEqual(1);
+                expect(cache.get(coordinates).content).toEqual(3);
                 
                 done();
             });

@@ -90,8 +90,10 @@ define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.til
                     this.updateTile(tileData.content, new Point(tileData.position.x, tileData.position.y), tileSize);
                 }
             }, this);
+            
+            this.cache.collectGarbage();
         }
-
+        
         console.log('Tiles drawn: ' + this.tiles.children().length);
     };
 

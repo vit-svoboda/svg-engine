@@ -55,12 +55,17 @@ public class DataService {
 
         ChunkProvider provider = new ChunkProvider(new Point(x, y), width, height);
         
+        return provider.createChunk(IsPartialUpdateAllowed(cacheControl));
+    }
+    
+    private boolean IsPartialUpdateAllowed(String cacheControlHeader) {
+        
         boolean allowPartialUpdate = false;
-        if (cacheControl != null) {
-            CacheControl cc = CacheControl.valueOf(cacheControl);
+        if (cacheControlHeader != null) {
+            CacheControl cc = CacheControl.valueOf(cacheControlHeader);
             allowPartialUpdate = cc.getMaxAge() > 0;
         }
         
-        return provider.createChunk(allowPartialUpdate);
+        return allowPartialUpdate;
     }
 }
