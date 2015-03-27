@@ -112,9 +112,26 @@ define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.til
     
     Engine.prototype.placeObject = function (tile, objectType) {
         
-        var object = this.assetHandler.createObject(this.objects, objectType, tile.coordinates),
-            tileSize = this.camera.getTileSize();
+        var object = this.assetHandler.createObject(this.objects, objectType),
+            tileSize = this.camera.getTileSize(),
+            index = null;
         
+        this.objects.children()
+                    .sort(function (a, b) {
+                        var c1 = a.location.coordinates,
+                            c2 = b.location.coordinates;
+                        return (c1.x + c1.y) - (c2.x + c2.y);
+                    })
+                    .some(function (i) {
+                        var c1 = i.location.coordinates,
+                            c2 = tile.coordinates;
+                        if ((c1.x + c1.y) > (c2.x + c2.y)) {
+                            index = i.position();
+                            return true;
+                        }
+                    });
+        
+        this.objects.add(object, index);
         object.tile(tileSize, object.tallness);
         
         // TODO: Add y to compensate for altitude.
@@ -169,6 +186,7 @@ define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.til
 
         // Draw the actual tile
         var tile = this.assetHandler.createTile(this.tiles, content);
+        this.tiles.add(tile, 0);
 
         tile.tile(tileSize);
 

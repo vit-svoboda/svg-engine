@@ -57,8 +57,8 @@ define(function () {
     };
     
     
-    AssetHandler.prototype.createObject = function(context, objectType, coordinates) {
-        return context.sprite(this.spritesheet.get(objectType), coordinates);  
+    AssetHandler.prototype.createObject = function(context, objectType) {
+        return context.sprite(this.spritesheet.get(objectType));
     };
     
     return AssetHandler;
