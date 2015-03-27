@@ -7,6 +7,7 @@ define(['jquery'], function ($) {
     function Controller(engine) {
         this.engine = engine;
         this.dialogCount = 0;
+        this.clickAction = null;
     }    
     
     /**
@@ -16,11 +17,17 @@ define(['jquery'], function ($) {
      * @param {type} e Click event arguments.
      */
     Controller.prototype.onClick = function (e) {
-        var tile = e.currentTarget.instance;
+        var tile = e.currentTarget.instance,
+            client = tile.engine.client;
         
-        // TODO: Actually on mouse down place there some temporary item, on mouse up make it permanent.
-        // Meanwhile ask server for detailed information.
-        tile.engine.client.getDetailedData(tile.coordinates);
+        if (client.clickAction) {
+            client.clickAction(tile);
+        } else {
+        
+            // TODO: Actually on mouse down place there some temporary item, on mouse up make it permanent.
+            // Meanwhile ask server for detailed information.
+            client.getDetailedData(tile.coordinates);
+        }
     };
     
     Controller.prototype.processDetailedData = function (context, tileData) {
@@ -67,22 +74,48 @@ define(['jquery'], function ($) {
         var ui = context.foreignObject(200, 600),
             engine = this.engine,
             speed = 100,
-            toolbar = $('<div class="ui"></div>'),
-            up = $('<button type="button" class="arrow up" alt="Up">&#8593;</button>').click(function (e) {
+            menu = $('<div class="ui"></div>'),
+            up = $('<button type="button" class="arrow up" alt="Up">&#8593;</button>').click(function () {
                 engine.move(0, -speed);
             }),
-            down = $('<button type="button" class="arrow down" alt="Down">&#8595;</button>').click(function (e) {
+            down = $('<button type="button" class="arrow down" alt="Down">&#8595;</button>').click(function () {
                 engine.move(0, speed);
             }),
-            left = $('<button type="button" class="arrow left" alt="Left">&#8592;</button>').click(function (e) {
+            left = $('<button type="button" class="arrow left" alt="Left">&#8592;</button>').click(function () {
                 engine.move(-speed, 0);
             }),
-            right = $('<button type="button" class="arrow right" alt="Right">&#8594;</button>').click(function (e) {
+            right = $('<button type="button" class="arrow right" alt="Right">&#8594;</button>').click(function () {
                 engine.move(speed, 0);
+            }),
+            toolbar = $('<div></div>'),
+            building = $('<button type="button" alt="Building">Building</button>').click(function (e) {
+                var button = $(e.currentTarget);
+                
+                if (button.hasClass('selected')) {
+                    
+                    // Cancel the action on the second click.
+                    engine.client.clickAction = null;
+                } else {
+                    
+                    // Cancel any other action.
+                    button.siblings().removeClass('selected');
+                    
+                    engine.client.clickAction = function (tile) {
+                        
+                        // The action is one-time only.
+                        tile.engine.client.clickAction = null;
+                        button.removeClass('selected');
+                    
+                        // Perform the actual action.
+                        engine.placeObject(tile, 'vertical-car');
+                    };
+                }
+                button.toggleClass('selected');
             });
             
-        toolbar.append(left, up, down, right);
-        $(ui.node).append(toolbar);
+        toolbar.append(building);
+        menu.append(left, up, down, right, toolbar);
+        $(ui.node).append(menu);
         
         ui.move(context.width() - ui.width() - 30, 30);
         

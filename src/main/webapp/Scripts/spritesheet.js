@@ -13,7 +13,11 @@ define(function() {
         this.sheetHeight = height;
     };
 
-    SpriteSheet.prototype.define = function(id, x, y, animationFrameCount, animationSpeed) {
+    SpriteSheet.prototype.define = function(id, x, y, tallness) {
+        if (tallness) {
+            y -= tallness;
+        }
+        
         var width = this.sheetWidth,
             height = this.sheetHeight,
             url = this.sheetUrl,
@@ -25,32 +29,41 @@ define(function() {
                     y: -y
                 });
             }).attr({ patternUnits: 'objectBoundingBox' });
-
-        // Default to no animation
-        sprite.animationFrameCount = animationFrameCount || 1;
-        sprite.currentFrame = 0;
-        sprite.lastFrameTime = 0;
-
-        // Default to full animation speed
-        sprite.animationSpeed = animationSpeed || 0;
-
-        sprite.nextFrame = function(timestamp) {
             
-            // Show new frame only if the previous one has been displayed for sufficient time
-            if((this.animationFrameCount > 1) && (timestamp > this.lastFrameTime + this.animationSpeed)) {
-                var i = this.currentFrame;
-            
-                i = ++i % this.animationFrameCount;
+        sprite.tallness = tallness || 0;
+        sprite.setupAnimation = setupAnimation;
 
-                // TODO: Sprite needs it's width defined.
-                this.spriteBackground.x(i * -100);
-                this.currentFrame = i;
-                this.lastFrameTime = timestamp;
-            }
-        };
-
-        this.sprites[id] = sprite;
+        return this.sprites[id] = sprite;
     };
+    
+    
+    function setupAnimation (animationFrameCount, animationSpeed) {
+        
+        // Default to no animation
+        if (animationFrameCount > 1) {            
+            this.animationFrameCount = animationFrameCount;
+            this.currentFrame = 0;
+            this.lastFrameTime = 0;
+
+            // Default to full animation speed
+            this.animationSpeed = animationSpeed || 0;
+
+            this.nextFrame = function(timestamp) {
+            
+                // Show new frame only if the previous one has been displayed for sufficient time
+                if (timestamp > this.lastFrameTime + this.animationSpeed) {
+                    var i = this.currentFrame;
+            
+                    i = ++i % this.animationFrameCount;
+
+                    // TODO: Sprite needs it's width defined.
+                    this.spriteBackground.x(i * -100);
+                    this.currentFrame = i;
+                    this.lastFrameTime = timestamp;
+                }
+            };
+        }
+    }
 
     SpriteSheet.prototype.get = function(id) {
         return this.sprites[id];
@@ -59,9 +72,12 @@ define(function() {
     SpriteSheet.prototype.animateSprites = function(timestamp) {
         var s, sprites = this.sprites;
         
-        for (var s in sprites) {
+        for (s in sprites) {
             if (sprites.hasOwnProperty(s)) {
-                sprites[s].nextFrame(timestamp);
+                s = sprites[s];
+                if (s.nextFrame) {
+                    s.nextFrame(timestamp);
+                }
             }
         }
     };

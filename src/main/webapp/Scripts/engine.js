@@ -23,6 +23,9 @@ define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.til
 
             // Information about actually drawn field of view.
             this.tiles = this.context.group();
+            
+            // Objects layer is above the ground.
+            this.objects = this.context.group();
 
             this.lastUpdate = 0;
 
@@ -106,6 +109,25 @@ define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.til
         this.controller.processDetailedData(this.context, tileData);
     };
     
+    
+    Engine.prototype.placeObject = function (tile, objectType) {
+        
+        var object = this.assetHandler.createObject(this.objects, objectType, tile.coordinates),
+            tileSize = this.camera.getTileSize();
+        
+        object.tile(tileSize, object.tallness);
+        
+        // TODO: Add y to compensate for altitude.
+        // TODO: Or each 'layer' will have own group shifted up a bit.
+        object.move(tile.center.x - tileSize.width / 2, tile.center.y - tileSize.height / 2 - object.tallness);
+        
+        tile.objects = tile.objects || [];
+        tile.objects.push(object);
+        
+        object.location = tile;
+    };
+    
+    
     /**
      * Moves camera by given difference.
      * 
@@ -119,7 +141,9 @@ define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.til
             moveAnimationSpeed = 200;
 
         this.tiles.animate(moveAnimationSpeed)
-                  .move(this.tiles.x() + -xDiff, this.tiles.y() + -yDiff);
+                  .move(this.tiles.x() - xDiff, this.tiles.y() - yDiff);
+        this.objects.animate(moveAnimationSpeed)
+                    .move(this.objects.x() - xDiff, this.objects.y() - yDiff);
 
         setTimeout(function () {
             camera.move(xDiff, yDiff);

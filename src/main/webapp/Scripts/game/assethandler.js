@@ -25,10 +25,14 @@ define(function () {
             this.spritesheet.define('concrete', 0, 100);
         } else {
             this.spritesheet.load('Images/tiles.png', 500, 150);
-            this.spritesheet.define('sand', 0, 0, 5);
-            this.spritesheet.define('grass', 0, 50, 3, 200);
+            this.spritesheet.define('sand', 0, 0).setupAnimation(5);
+            this.spritesheet.define('grass', 0, 50).setupAnimation(3, 200);
             this.spritesheet.define('concrete', 0, 100);
         }
+        
+        this.spritesheet.load('Images/train.png', 200, 50);
+        this.spritesheet.define('vertical-car', 0, 0, 10);
+        this.spritesheet.define('horizontal-car', 100, 0, 10);
     };
 
     /**
@@ -50,6 +54,11 @@ define(function () {
             default:
                 return context.polygon().attr('class', 'Tile');
         }
+    };
+    
+    
+    AssetHandler.prototype.createObject = function(context, objectType, coordinates) {
+        return context.sprite(this.spritesheet.get(objectType), coordinates);  
     };
     
     return AssetHandler;
