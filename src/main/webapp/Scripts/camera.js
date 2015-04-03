@@ -81,6 +81,13 @@ define(['point'], function (Point) {
 
         return position;
     };
+    
+    Camera.prototype.getTileCenteredCoordinates = function (tileCenter, tileSize, objectHeight) {
+        if(!tileSize){
+            tileSize = this.getTileSize();
+        }
+        
+    };
 
     Camera.prototype.showTile = function (center, tileSize) {
         if (center) {

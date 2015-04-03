@@ -107,7 +107,14 @@ define(['jquery'], function ($) {
                         button.removeClass('selected');
                     
                         // Perform the actual action.
-                        engine.placeObject(tile, 'vertical-car');
+                        engine.placeObject(tile, 'vertical-car')
+                              .click(function (e) {
+                                var car = e.currentTarget.instance;
+                        
+                                engine.client.clickAction = function(tile) {
+                                    engine.moveObject(car, tile, 100);
+                                };
+                            });
                     };
                 }
                 button.toggleClass('selected');
