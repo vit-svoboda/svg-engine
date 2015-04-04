@@ -107,43 +107,65 @@ define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.til
      */
     Engine.prototype.processDetailedData = function (tileData) {
         this.controller.processDetailedData(this.context, tileData);
-    };
+    };    
     
-    
+    /**
+     * Obtains an object of given type and places it on given tile.
+     * 
+     * @param {Object} tile Tile where the object should be placed.
+     * @param {Object} objectType Identifier of the object that should be created by assetHandler.
+     * @returns {Object} placed object.
+     */
     Engine.prototype.placeObject = function (tile, objectType) {
         
         var object = this.assetHandler.createObject(this.objects, objectType),
             tileSize = this.camera.getTileSize(),
-            index = null;
-        
-        this.objects.children()
-                    .sort(function (a, b) {
-                        var c1 = a.location.coordinates,
-                            c2 = b.location.coordinates;
-                        return (c1.x + c1.y) - (c2.x + c2.y);
-                    })
-                    .some(function (i) {
-                        var c1 = i.location.coordinates,
-                            c2 = tile.coordinates;
-                        if ((c1.x + c1.y) > (c2.x + c2.y)) {
-                            index = i.position();
-                            return true;
-                        }
-                    });
+            index = this.getObjectOverlapIndex(tile.coordinates),
+            topLeft = this.camera.getTileCenteredCoordinates(tile.center, tileSize, object.tallness);
         
         this.objects.add(object, index);
         object.tile(tileSize, object.tallness);
         
         // TODO: Add y to compensate for altitude.
         // TODO: Or each 'layer' will have own group shifted up a bit.
-        object.move(tile.center.x - tileSize.width / 2, tile.center.y - tileSize.height / 2 - object.tallness);
+        object.move(topLeft.x, topLeft.y);
         
         tile.objects = tile.objects || [];
         tile.objects.push(object);
         
         object.location = tile;
-    };
+        
+        return object;
+    };    
     
+    /**
+     * Places given object on the given tile. The movement can take some time when object speed is specified.
+     * 
+     * @param {Object} object Object to be moved.
+     * @param {Object} tile Target tile.
+     * @param {number} speed Object movement speed.
+     */
+    Engine.prototype.moveObject = function (object, tile, speed) {
+        var topLeft = this.camera.getTileCenteredCoordinates(tile.center, null, object.tallness),
+            animationDuration = speed * object.location.coordinates.getDistance(tile.coordinates),
+            os = this.objects;
+        
+        // Move the object on the 2D plain
+        (speed ? object.animate(animationDuration) : object)
+                .move(topLeft.x, topLeft.y);
+        
+        // Fix 3D/overlap
+        setTimeout(function() {
+            os.removeElement(object);
+            var index = this.getObjectOverlapIndex(tile.coordinates);
+            os.add(object, index);
+        }.bind(this), animationDuration / 2);
+        
+        // At the end set the target tile as the new location
+        setTimeout(function() {
+            object.location = tile;
+        }, animationDuration);
+    };
     
     /**
      * Moves camera by given difference.
@@ -162,15 +184,17 @@ define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.til
         this.objects.animate(moveAnimationSpeed)
                     .move(this.objects.x() - xDiff, this.objects.y() - yDiff);
 
+        
+        
         setTimeout(function () {
             camera.move(xDiff, yDiff);
-
+            
             // Get rid of those outside screen.
             this.cache.clear(function (tile) {
                 return tile && !camera.showTile(tile.center, tileSize);
             });
         }.bind(this), moveAnimationSpeed);
-
+        
         //TODO: Fetch new in screen from cache.        
     };    
 
@@ -185,7 +209,9 @@ define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.til
     Engine.prototype.drawTile = function (content, position, tileSize, center) {
 
         // Draw the actual tile
-        var tile = this.assetHandler.createTile(this.tiles, content);
+        var tile = this.assetHandler.createTile(this.tiles, content),
+            topLeft = this.camera.getTileCenteredCoordinates(center, tileSize);
+    
         this.tiles.add(tile, 0);
 
         tile.tile(tileSize);
@@ -200,9 +226,7 @@ define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.til
         tile.click(this.controller.onClick);
 
         // Move operates with top left corner, while my center is tile center.
-        tile.move(center.x - tileSize.width / 2, center.y - tileSize.height / 2);
-
-        // TODO: Reorder all tiles infront of this one on the z-index
+        tile.move(topLeft.x, topLeft.y);
 
         return tile;
     };
@@ -269,6 +293,26 @@ define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.til
         } else {
             this.spritesheet.animateSprites(timestamp);
         }
+    };
+    
+    /**
+     * Returns index on which the object should be placed in the object collection to achieve correct object overlapping.
+     * 
+     * @param {Point} coordinates
+     */
+    Engine.prototype.getObjectOverlapIndex = function (coordinates) {
+        var result = null;
+        
+        this.objects.children()
+                    .some(function (i) {
+                        var c = i.location.coordinates;
+                        if ((c.x + c.y) > (coordinates.x + coordinates.y)) {
+                            result = i.position();
+                            return true;
+                        }
+                    });
+                    
+        return result;
     };
 
     Engine.prototype.resize = function (container) {

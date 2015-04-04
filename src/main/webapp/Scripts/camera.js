@@ -87,6 +87,7 @@ define(['point'], function (Point) {
             tileSize = this.getTileSize();
         }
         
+        return new Point(tileCenter.x - tileSize.width / 2, tileCenter.y - tileSize.height / 2 - (objectHeight || 0));
     };
 
     Camera.prototype.showTile = function (center, tileSize) {
