@@ -18,15 +18,13 @@ define(['jquery'], function ($) {
      */
     Controller.prototype.onClick = function (e) {
         var tile = e.currentTarget.instance,
-            client = tile.engine.client;
+            engine = tile.engine,
+            action = engine.controller.clickAction;
         
-        if (client.clickAction) {
-            client.clickAction(tile);
+        if (action) {
+            action(tile);
         } else {
-        
-            // TODO: Actually on mouse down place there some temporary item, on mouse up make it permanent.
-            // Meanwhile ask server for detailed information.
-            client.getDetailedData(tile.coordinates);
+            engine.client.getDetailedData(tile.coordinates);
         }
     };
     
@@ -88,54 +86,28 @@ define(['jquery'], function ($) {
                 engine.move(speed, 0);
             }),
             toolbar = $('<div></div>'),
-            train = $('<button type="button" alt="Build a train car.">Train car</button>').click(function (e) {
-                var button = $(e.currentTarget);
-                
-                if (button.hasClass('selected')) {
-                    
-                    // Cancel the action on the second click.
-                    engine.client.clickAction = null;
-                } else {
-                    
-                    // Cancel any other action.
-                    button.siblings().removeClass('selected');
-                    
-                    engine.client.clickAction = function (tile) {
+            train = $('<button type="button" alt="Build a train car.">Train car</button>')
+                .click(this.handleOneTimeAction(engine, function (tile) {
+                    engine.placeObject(tile, 'vertical-car')
+                        .click(function (e) {
+                            var car = e.currentTarget.instance;
                         
-                        // The action is one-time only.
-                        tile.engine.client.clickAction = null;
-                        button.removeClass('selected');
-                    
-                        // Perform the actual action.
-                        engine.placeObject(tile, 'vertical-car')
-                              .click(function (e) {
-                                var car = e.currentTarget.instance;
-                        
-                                engine.client.clickAction = function(tile) {
-                                    engine.moveObject(car, tile, 100);
-                                };
-                            });
-                    };
-                }
-                button.toggleClass('selected');
-            }),
-            house = $('<button type="button" alt="Build a house.">House</button>').click(function (e) {
-                var button = $(e.currentTarget);
-                
-                if (button.hasClass('selected')) {
-                    engine.client.clientAction = null;
-                } else {
-                    button.siblings().removeClass('selected');
-                    
-                    engine.client.clickAction = function (tile) {
-                      
-                        tile.engine.client.clickAction = null;
-                        button.removeClass('selected');
-                        
-                        engine.placeObject(tile, 'house');
-                    };
-                }
-            });
+                            engine.controller.clickAction = function(tile) {
+                                engine.moveObject(car, tile, 100);
+                            };
+                        });
+                })),
+            house = $('<button type="button" alt="Build a house.">House</button>')
+                .click(this.handleOneTimeAction(engine, function (tile) { 
+                    engine.placeObject(tile, 'house')
+                        .click(function (e) {
+                            // Pass the click event to the ground.
+                            var action = engine.controller.clickAction;
+                            if (typeof(action) === 'function') {
+                                action(e.currentTarget.instance.location);
+                            }
+                        });
+                }));
             
         toolbar.append(train, house);
         menu.append(left, up, down, right, toolbar);
@@ -144,6 +116,29 @@ define(['jquery'], function ($) {
         ui.move(context.width() - ui.width() - 30, 30);
         
         return [ui];
+    };
+    
+    
+    Controller.prototype.handleOneTimeAction = function (engine, action) {
+        return function (e) {
+            var button = $(e.currentTarget);
+                
+            if (button.hasClass('selected')) {
+                engine.controller.clientAction = null;
+            } else {
+                button.siblings().removeClass('selected');
+                    
+                engine.controller.clickAction = function (tile) {
+                      
+                    tile.engine.controller.clickAction = null;
+                    button.removeClass('selected');
+                        
+                    action(tile);
+                };
+            }
+            
+            button.toggleClass('selected');
+        };
     };
     
     return Controller;

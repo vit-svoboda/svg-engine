@@ -121,18 +121,18 @@ define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.til
         var object = this.assetHandler.createObject(this.objects, objectType),
             tileSize = this.camera.getTileSize(),
             index = this.getObjectOverlapIndex(tile.coordinates),
-            topLeft = this.camera.getTileCenteredCoordinates(tile.center, tileSize, object.tallness);
+            topLeft = this.camera.getTileCenteredCoordinates(tile.center, tileSize, object.tallness),
+            heightSum = this.getTileObjectsHeight(tile);
         
         this.objects.add(object, index);
+        
         object.tile(tileSize, object.tallness);
         
-        // TODO: Add y to compensate for altitude.
-        // TODO: Or each 'layer' will have own group shifted up a bit.
-        object.move(topLeft.x, topLeft.y);
-        
+        // Add y to compensate for altitude.        
+        object.move(topLeft.x, topLeft.y - heightSum);        
+
         tile.objects = tile.objects || [];
-        tile.objects.push(object);
-        
+        tile.objects.push(object);        
         object.location = tile;
         
         return object;
@@ -148,11 +148,12 @@ define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.til
     Engine.prototype.moveObject = function (object, tile, speed) {
         var topLeft = this.camera.getTileCenteredCoordinates(tile.center, null, object.tallness),
             animationDuration = speed * object.location.coordinates.getDistance(tile.coordinates),
-            os = this.objects;
+            os = this.objects,
+            heightSum = this.getTileObjectsHeight(tile);
         
         // Move the object on the 2D plain
         (speed ? object.animate(animationDuration) : object)
-                .move(topLeft.x, topLeft.y);
+                .move(topLeft.x, topLeft.y - heightSum);
         
         // Fix 3D/overlap
         setTimeout(function() {
@@ -343,6 +344,24 @@ define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.til
                     });
                     
         return result;
+    };
+    
+    /**
+     * Sums height of all objects placed on a tile.
+     * 
+     * @param {type} tile
+     * @returns {number}
+     */
+    Engine.prototype.getTileObjectsHeight = function (tile) {
+        var objects = tile.objects || [],
+            sum = 0;
+        
+        // Add y to compensate for altitude.        
+        objects.forEach(function(o) {
+            sum += o.tallness || 0;
+        });
+        
+        return sum;
     };
 
     Engine.prototype.resize = function (container) {
