@@ -30,9 +30,12 @@ define(function () {
             this.spritesheet.define('concrete', 0, 100);
         }
         
-        this.spritesheet.load('Images/train.png', 200, 50);
-        this.spritesheet.define('vertical-car', 0, 0, 10);
-        this.spritesheet.define('horizontal-car', 100, 0, 10);
+        this.spritesheet.load('Images/train.png', 200, 70);
+        this.spritesheet.define('vertical-car', 0, 0, 20);
+        this.spritesheet.define('horizontal-car', 100, 0, 20);
+        
+        this.spritesheet.load('Images/building.png', 100, 85);
+        this.spritesheet.define('house', 0, 0, 35);
     };
 
     /**

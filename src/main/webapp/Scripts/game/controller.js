@@ -88,7 +88,7 @@ define(['jquery'], function ($) {
                 engine.move(speed, 0);
             }),
             toolbar = $('<div></div>'),
-            building = $('<button type="button" alt="Building">Building</button>').click(function (e) {
+            train = $('<button type="button" alt="Build a train car.">Train car</button>').click(function (e) {
                 var button = $(e.currentTarget);
                 
                 if (button.hasClass('selected')) {
@@ -118,9 +118,26 @@ define(['jquery'], function ($) {
                     };
                 }
                 button.toggleClass('selected');
+            }),
+            house = $('<button type="button" alt="Build a house.">House</button>').click(function (e) {
+                var button = $(e.currentTarget);
+                
+                if (button.hasClass('selected')) {
+                    engine.client.clientAction = null;
+                } else {
+                    button.siblings().removeClass('selected');
+                    
+                    engine.client.clickAction = function (tile) {
+                      
+                        tile.engine.client.clickAction = null;
+                        button.removeClass('selected');
+                        
+                        engine.placeObject(tile, 'house');
+                    };
+                }
             });
             
-        toolbar.append(building);
+        toolbar.append(train, house);
         menu.append(left, up, down, right, toolbar);
         $(ui.node).append(menu);
         

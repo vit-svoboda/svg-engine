@@ -14,20 +14,17 @@ define(function() {
     };
 
     SpriteSheet.prototype.define = function(id, x, y, tallness) {
-        if (tallness) {
-            y -= tallness;
-        }
-        
-        var width = this.sheetWidth,
-            height = this.sheetHeight,
+       
+        var attributes = {
+                width: this.sheetWidth,
+                height: this.sheetHeight,
+                x: -x,
+                y: -y
+            },
             url = this.sheetUrl,
             sprite = this.context.pattern(1, 1, function(add) {
-                add.spriteBackground = add.image(url).attr({
-                    width: width,
-                    height: height,
-                    x: -x,
-                    y: -y
-                });
+                add.spriteBackground = add.image(url)
+                                          .attr(attributes);
             }).attr({ patternUnits: 'objectBoundingBox' });
             
         sprite.tallness = tallness || 0;
