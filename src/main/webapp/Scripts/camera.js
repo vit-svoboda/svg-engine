@@ -9,6 +9,8 @@ define(['point'], function (Point) {
         // TODO: default tile size should be responsibility of the controller providing sprites.
         this.BASE_TILE_SIZE = baseTileSize || 100;
         this.zoom = 1.0;
+        
+        this.currentScreenOuterBounds = null;
     }
 
     Camera.prototype.getTileSize = function () {
@@ -21,14 +23,14 @@ define(['point'], function (Point) {
 
     Camera.prototype.getScreenOuterBounds = function () {
 
-        // TODO: cache the result
+        if (this.currentScreenOuterBounds) {
+           return this.currentScreenOuterBounds; 
+        }
         var tileSize = this.getTileSize(),
             halfResolution = Math.max(this.screenSize.x / tileSize.width, this.screenSize.y / tileSize.height),
-            // TODO: working with top left corner would make windows resizing easier.
-            // TODO: Would it complicate moving camera to a given object too much?
             center = this.position;
 
-        return [
+        return this.currentScreenOuterBounds = [
             new Point(Math.floor(center.x - halfResolution), Math.floor(center.y - halfResolution)),
             new Point(Math.ceil(center.x + halfResolution), Math.ceil(center.y + halfResolution))
         ];
@@ -51,15 +53,8 @@ define(['point'], function (Point) {
                                              newSize.y * aspectRatio);
         }
 
-        /*
-        // Revert previous screen centering offset
-        this.moveTransform.x -= oldSize.x / 2;
-        this.moveTransform.y += oldSize.y;
-
-        // Add new screen centering offset
-        this.moveTransform.x += newSize.x / 2;
-        this.moveTransform.y -= newSize.y;
-        */
+        // Reset the screen outer bounds
+        this.currentScreenOuterBounds = null;
     };
 
     Camera.prototype.getIsometricCoordinates = function (position) {
@@ -110,6 +105,9 @@ define(['point'], function (Point) {
 
         this.moveTransform.x += xDiff;
         this.moveTransform.y += yDiff;
+        
+        // Reset the screen outer bounds
+        this.currentScreenOuterBounds = null;
     };
 
     return Camera;

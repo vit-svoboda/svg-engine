@@ -183,27 +183,57 @@ define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.til
                   .move(this.tiles.x() - xDiff, this.tiles.y() - yDiff);
         this.objects.animate(moveAnimationSpeed)
                     .move(this.objects.x() - xDiff, this.objects.y() - yDiff);
-
-        
         
         setTimeout(function () {
-            camera.move(xDiff, yDiff);
-            
+                        
             // Get rid of those outside screen.
             this.cache.clear(function (tile) {
                 return tile && !camera.showTile(tile.center, tileSize);
             });
         }.bind(this), moveAnimationSpeed);
         
-        //TODO: Fetch new in screen from cache.        
-    };    
+        camera.move(xDiff, yDiff);
+        
+        this.fillScreenFromCache(tileSize);
+    };
+    
+    /**
+     * Fills currently empty spots on the screen from cache.
+     * Typically this is useful after the screen has been moved to some area where content is still cached.
+     * 
+     * @param {Object} tileSize size of the tile on screen.
+     */
+    Engine.prototype.fillScreenFromCache = function(tileSize) {
+        
+        var range = this.camera.getScreenOuterBounds(),
+            x, y,
+            cacheItem, position, center,
+            from = range[0],
+            to = range[1];
+        
+        for (x = from.x; x < to.x; x++) {
+            for(y = from.y; y < to.y; y++) {
+                
+                position = new Point(x, y);
+                cacheItem = this.cache.get(position);
+                
+                if (cacheItem && !cacheItem.tile){
+                    center = this.camera.getIsometricCoordinates(position);
+                    
+                    if (this.camera.showTile(center, tileSize)) {                    
+                        this.drawTile(cacheItem.content, position, tileSize, this.camera.getIsometricCoordinates(position));
+                    }
+                }
+            }
+        }
+    };
 
     /**
      * Draws a tile on the screen.
      * 
      * @param {Object} content Content of the tile.
      * @param {Point} position Tile logical coordinates.
-     * @param {type} tileSize size of the tile on screen.
+     * @param {Object} tileSize size of the tile on screen.
      * @param {Point} center of the tile on the screen.
      */
     Engine.prototype.drawTile = function (content, position, tileSize, center) {
