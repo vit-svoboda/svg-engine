@@ -151,6 +151,10 @@ define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.til
             os = this.objects,
             heightSum = this.getTileObjectsHeight(tile);
         
+        object.location.objects = object.location.objects.filter(function (i) {
+            return i !== object;
+        });
+        
         // Move the object on the 2D plain
         (speed ? object.animate(animationDuration) : object)
                 .move(topLeft.x, topLeft.y - heightSum);
@@ -165,6 +169,7 @@ define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.til
         // At the end set the target tile as the new location
         setTimeout(function() {
             object.location = tile;
+            tile.objects.push(object);
         }, animationDuration);
     };
     

@@ -118,7 +118,13 @@ define(['jquery'], function ($) {
         return [ui];
     };
     
-    
+    /**
+     * Creates a handler that will execute given action on next tile click.
+     * 
+     * @param {Engine} engine
+     * @param {Function} action
+     * @returns {Function} action handler
+     */
     Controller.prototype.handleOneTimeAction = function (engine, action) {
         return function (e) {
             var button = $(e.currentTarget);
