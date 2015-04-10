@@ -16,7 +16,11 @@ define(['engine', 'point'], function (Engine, Point) {
                 spy;
                 
             beforeEach(function () {
-                spy = spyOn(engine, 'drawTile').and.returnValue({ center: new Point(0, 0), remove: function() {} });
+                spy = spyOn(engine, 'drawTile').and.returnValue({
+                    cx: function(x) { return x || 0; },
+                    cy: function(y) { return y || 0; },
+                    remove: function() {}
+                });
             });
 
             it('Updates a tile only for the first time as long as the content stays the same.', function (done) {

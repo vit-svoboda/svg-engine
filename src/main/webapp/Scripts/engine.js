@@ -17,15 +17,17 @@ define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.til
             this.context = SVG(container[0]);
 
             // Information about logical field of view.
-            this.camera = new Camera();//new Point(35.1, 16.7));
+            this.camera = new Camera();
             this.cache = new DataCache();
             this.spritesheet = new SpriteSheet(this.context);
 
             // Information about actually drawn field of view.
-            this.tiles = this.context.group();
+            this.managedElements = this.context.group();
+                        
+            this.tiles = this.managedElements.group();
             
             // Objects layer is above the ground.
-            this.objects = this.context.group();
+            this.objects = this.managedElements.group();
 
             this.lastUpdate = 0;
 
@@ -96,8 +98,6 @@ define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.til
             
             this.cache.collectGarbage();
         }
-        
-        console.log('Tiles drawn: ' + this.tiles.children().length);
     };
 
     /**
@@ -120,16 +120,14 @@ define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.til
         
         var object = this.assetHandler.createObject(this.objects, objectType),
             tileSize = this.camera.getTileSize(),
-            index = this.getObjectOverlapIndex(tile.coordinates),
-            topLeft = this.camera.getTileCenteredCoordinates(tile.center, tileSize, object.tallness),
-            heightSum = this.getTileObjectsHeight(tile);
+            index = this.getObjectOverlapIndex(tile.coordinates);
         
         this.objects.add(object, index);
         
         object.tile(tileSize, object.tallness);
         
         // Add y to compensate for altitude.        
-        object.move(topLeft.x, topLeft.y - heightSum);        
+        this.moveObjectOverTile(object, tile);
 
         tile.objects = tile.objects || [];
         tile.objects.push(object);        
@@ -146,29 +144,24 @@ define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.til
      * @param {number} speed Object movement speed.
      */
     Engine.prototype.moveObject = function (object, tile, speed) {
-        var topLeft = this.camera.getTileCenteredCoordinates(tile.center, null, object.tallness),
-            animationDuration = speed * object.location.coordinates.getDistance(tile.coordinates),
-            os = this.objects,
-            heightSum = this.getTileObjectsHeight(tile);
+        var os = this.objects,
+            animationDuration = this.moveObjectOverTile(object, tile, speed);
         
         object.location.objects = object.location.objects.filter(function (i) {
             return i !== object;
         });
         
-        // Move the object on the 2D plain
-        (speed ? object.animate(animationDuration) : object)
-                .move(topLeft.x, topLeft.y - heightSum);
-        
         // Fix 3D/overlap
-        setTimeout(function() {
+        setTimeout(function () {
             os.removeElement(object);
             var index = this.getObjectOverlapIndex(tile.coordinates);
             os.add(object, index);
         }.bind(this), animationDuration / 2);
         
         // At the end set the target tile as the new location
-        setTimeout(function() {
+        setTimeout(function () {
             object.location = tile;
+            tile.objects = tile.objects || [];
             tile.objects.push(object);
         }, animationDuration);
     };
@@ -185,16 +178,14 @@ define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.til
             tileSize = camera.getTileSize(),
             moveAnimationSpeed = 200;
 
-        this.tiles.animate(moveAnimationSpeed)
-                  .move(this.tiles.x() - xDiff, this.tiles.y() - yDiff);
-        this.objects.animate(moveAnimationSpeed)
-                    .move(this.objects.x() - xDiff, this.objects.y() - yDiff);
+        this.managedElements.animate(moveAnimationSpeed)
+                            .dmove(-xDiff, -yDiff);
         
         setTimeout(function () {
                         
             // Get rid of those outside screen.
             this.cache.clear(function (tile) {
-                return tile && !camera.showTile(tile.center, tileSize);
+                return tile && !camera.showTile(new Point(tile.cx(), tile.cy()), tileSize);
             });
         }.bind(this), moveAnimationSpeed);
         
@@ -245,15 +236,13 @@ define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.til
     Engine.prototype.drawTile = function (content, position, tileSize, center) {
 
         // Draw the actual tile
-        var tile = this.assetHandler.createTile(this.tiles, content),
-            topLeft = this.camera.getTileCenteredCoordinates(center, tileSize);
+        var tile = this.assetHandler.createTile(this.tiles, content);
     
         this.tiles.add(tile, 0);
 
         tile.tile(tileSize);
 
         tile.coordinates = position;
-        tile.center = center;
         
         // So that engine is available in UI handlers.
         tile.engine = this;
@@ -262,7 +251,7 @@ define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.til
         tile.click(this.controller.onClick);
 
         // Move operates with top left corner, while my center is tile center.
-        tile.move(topLeft.x, topLeft.y);
+        tile.center(center.x, center.y);
 
         return tile;
     };
@@ -277,14 +266,16 @@ define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.til
     Engine.prototype.updateTile = function (tileContent, tilePosition, tileSize) {
         var oldTile = this.cache.get(tilePosition),
             center,
-            tile;
+            tile,
+            objects;
 
         // Do something only if the tile changed
         if (!oldTile || !oldTile.tile || oldTile.content !== tileContent) {
 
             // Reuse old coordinates if possible, otherwise calculate new
             if (oldTile && oldTile.tile) {
-                center = oldTile.tile.center;
+                center = new Point(oldTile.tile.cx(), oldTile.tile.cy());
+                objects = oldTile.tile.objects;
 
                 // Remove the original tile
                 oldTile.tile.remove();
@@ -297,6 +288,15 @@ define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.til
             // Skip tiles that would end up out of the screen
             if (this.camera.showTile(center, tileSize)) {
                 tile = this.drawTile(tileContent, tilePosition, tileSize, center);
+            }
+            
+            if (objects) {
+                
+                // Place old tile's objects on the updated tile.
+                objects.forEach(function (o) {
+                    o.location = tile;
+                });
+                tile.objects = objects;
             }
 
             // Update the data cache
@@ -349,6 +349,33 @@ define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.til
                     });
                     
         return result;
+    };
+    
+    /**
+     * Moves given object over selected tile.
+     * The height above the tile depends on tile existing objects and current object height.
+     * 
+     * @param {Object} object To be moved over the given tile.
+     * @param {type} tile Target tile
+     * @param {type} speed Movement animation speed.
+     * @returns {number} Move animation duration according to given speed.
+     */
+    Engine.prototype.moveObjectOverTile = function (object, tile, speed) {
+        var y = tile.cy() - this.getTileObjectsHeight(tile),
+            animationDuration = 0;
+        
+        if (object.tallness) {
+            y -= object.tallness / 2;
+        }
+        
+        if (speed > 0) {
+            animationDuration = speed * object.location.coordinates.getDistance(tile.coordinates);
+            object = object.animate(animationDuration);
+        }
+        
+        object.center(tile.cx(), y);
+        
+        return animationDuration;
     };
     
     /**
