@@ -5,14 +5,17 @@ define(['point'], function (Point) {
         this.position = position || new Point(0, 0);
         this.screenSize = new Point(0, 0);
         this.moveTransform = new Point(0, 0);
-
-        // TODO: default tile size should be responsibility of the controller providing sprites.
         this.BASE_TILE_SIZE = baseTileSize || 100;
         this.zoom = 1.0;
         
         this.currentScreenOuterBounds = null;
     }
 
+    /**
+     * Calculates size of a tile according to current camera configuration.
+     * 
+     * @returns {Object} Width and height of a tile.
+     */
     Camera.prototype.getTileSize = function () {
         var actualSize = this.BASE_TILE_SIZE * this.zoom;
         return {
@@ -21,6 +24,11 @@ define(['point'], function (Point) {
         };
     };
 
+    /**
+     * Calculates the screen outer boundaries in map data coordinates.
+     * 
+     * @returns {Array} Data range requred to populate the whole screen.
+     */
     Camera.prototype.getScreenOuterBounds = function () {
 
         if (this.currentScreenOuterBounds) {
@@ -36,6 +44,11 @@ define(['point'], function (Point) {
         ];
     };
 
+    /**
+     * Repositions the camera according to changed viewport size.
+     * 
+     * @param {type} size New viewport size
+     */
     Camera.prototype.resizeViewport = function (size) {
         var newSize = size || new Point(0, 0),
             oldSize = this.screenSize,
@@ -57,6 +70,12 @@ define(['point'], function (Point) {
         this.currentScreenOuterBounds = null;
     };
 
+    /**
+     * Calculates screen isometric coordinates (in pixels) according to given map data coordinates (in units).
+     * 
+     * @param {Point} position Map data coordinates
+     * @returns {Point} Isometric coordinates
+     */
     Camera.prototype.getIsometricCoordinates = function (position) {
         var tileSize = this.getTileSize(),
             x = position.x,
@@ -66,6 +85,14 @@ define(['point'], function (Point) {
                          ((x + y) * tileSize.height - this.isometricOffset.y) / 2);
     };
 
+    /**
+     * Calculates map data coordinates from given screen isometric coordinates.
+     * 
+     * @param {number} x X-axis coordinate on the screen.
+     * @param {number} y Y-axis coordinate on the screen.
+     * @param {Boolean} ignoreOffset Indicates whether the screen centering offset should be ignored in the calculation
+     * @returns {Point} Map data coordinates belonging to provided screen isometric coordinates.
+     */
     Camera.prototype.getOriginalCoordinates = function (x, y, ignoreOffset) {
         var ts = this.getTileSize(),
             offsetx = ignoreOffset ? 0 : (-this.isometricOffset.x / 2),
@@ -77,6 +104,14 @@ define(['point'], function (Point) {
         return position;
     };
 
+    /**
+     * Determines whether a tile of specified size with center on given location
+     * is within the viewport.
+     * 
+     * @param {type} center Tile position.
+     * @param {type} tileSize Tile size. Optional, automatically obtained if nothing passed in.
+     * @returns {Boolean} True if the specified tile should be displayed.
+     */
     Camera.prototype.showTile = function (center, tileSize) {
         if (center) {
             var ss = this.screenSize,
@@ -90,6 +125,12 @@ define(['point'], function (Point) {
         }
     };
 
+    /**
+     * Moves the camera by given margin.
+     * 
+     * @param {type} xDiff X-axis position difference (in pixels).
+     * @param {type} yDiff Y-axis position difference (in pixels).
+     */
     Camera.prototype.move = function (xDiff, yDiff) {
         var logicalDiff = this.getOriginalCoordinates(xDiff, yDiff, true);
 

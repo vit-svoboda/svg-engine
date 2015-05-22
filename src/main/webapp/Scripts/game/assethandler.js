@@ -25,8 +25,8 @@ define(function () {
             this.spritesheet.define('concrete', 0, 100);
         } else {
             this.spritesheet.load('Images/tiles.png', 500, 150);
-            this.spritesheet.define('sand', 0, 0).setupAnimation(5);
-            this.spritesheet.define('grass', 0, 50).setupAnimation(3, 200);
+            this.spritesheet.define('sand', 0, 0).setupAnimation(100, 5);
+            this.spritesheet.define('grass', 0, 50).setupAnimation(100,3, 200);
             this.spritesheet.define('concrete', 0, 100);
         }
         
@@ -40,7 +40,7 @@ define(function () {
 
     /**
      * Translates given content to its visual representation.
-     * Part of engine interface.
+     * Part of the engine interface.
      * 
      * @param {type} context Drawing context.
      * @param {type} content Tile content to be translated.
@@ -59,7 +59,14 @@ define(function () {
         }
     };
     
-    
+    /**
+     * Translates given object type identifier to the visual representation of the object.
+     * Part of the engine interface.
+     * 
+     * @param {type} context Drawing context.
+     * @param {type} objectType Object type recognized by the game implementation.
+     * @returns {SVGElement} Object visual representation.
+     */    
     AssetHandler.prototype.createObject = function(context, objectType) {
         return context.sprite(this.spritesheet.get(objectType));
     };

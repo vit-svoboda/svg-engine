@@ -27,6 +27,13 @@ define(function () {
     };
 
 
+    /**
+     * Tries to retrieve content for a tile on given coordinates from given data container.
+     * 
+     * @param {type} coordinates Tile coordinates
+     * @param {type} dataSet Data container to serve as a source for the tile content.
+     * @returns {Object} Content for the tile or undefined if nothing was found.
+     */
     DataCache.prototype.getFromDataSet = function (coordinates, dataSet) {
         var row = dataSet[this.coordinateToIndex(coordinates.x)];
         if (row) {
@@ -50,11 +57,15 @@ define(function () {
 
         row[this.coordinateToIndex(coordinates.y)] = { content: content, tile: tile };
         
-        // TODO: Increment the count only if there were no data for the coordinates? Will the check cost too much performance?
         this.currentCacheCount++;
     };
 
-    // TODO: Make sure the cache doesn't grow too large when moving around the 'infinite' map.
+    /**
+     * Removes all data that pass given predicate.
+     * 
+     * @param {function} detectGarbage Predicate is true if a data item is considered garbage.
+     * @param {Boolean} deleteData False if only tile visual representation should be removed and the actual data is to be kept.
+     */
     DataCache.prototype.clear = function (detectGarbage, deleteData) {
 
         var itemCount;
@@ -92,7 +103,6 @@ define(function () {
     DataCache.prototype.collectGarbage = function () {
         if (this.currentCacheCount > this.currentCacheLimit) {
             
-            // TODO: What if some tile from the cache is still on the screen?
             delete this.garbage;
             
             this.garbage = this.cache;

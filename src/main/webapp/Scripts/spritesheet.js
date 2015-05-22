@@ -6,22 +6,38 @@ define(function() {
         this.sprites = [];
     }
 
+    /**
+     * Loads an image on given URL so it can be
+     * 
+     * @param {String} url The image url
+     * @param {number} width Width of the image to be loaded
+     * @param {number} height Height of the image to be loaded
+     */
     SpriteSheet.prototype.load = function(url, width, height) {
-        // TODO: Pre-load the image so individual sprites just add the same image object.
-        this.sheetUrl = url;
-        this.sheetWidth = width;
-        this.sheetHeight = height;
+        this.sheetImage = new Image();
+        this.sheetImage.src = url;
+        this.sheetImage.width = width;
+        this.sheetImage.height = height;
     };
 
+    /**
+     * Defines a sprite as a part (or the whole lot) of currently loaded sprite-sheet.
+     * 
+     * @param {Object} id Identifier or the sprite for later retrieval
+     * @param {type} x X-axis position of the sprite in the sprite-sheet image.
+     * @param {type} y Y-axis position of the sprite in the sprite-sheet image.
+     * @param {type} tallness The simulated Z-axis height of the object.
+     * @returns {SVGElement}
+     */
     SpriteSheet.prototype.define = function(id, x, y, tallness) {
        
         var attributes = {
-                width: this.sheetWidth,
-                height: this.sheetHeight,
+                width: this.sheetImage.width,
+                height: this.sheetImage.height,
                 x: -x,
                 y: -y
             },
-            url = this.sheetUrl,
+            url = this.sheetImage.src,
             sprite = this.context.pattern(1, 1, function(add) {
                 add.spriteBackground = add.image(url)
                                           .attr(attributes);
@@ -34,7 +50,14 @@ define(function() {
     };
     
     
-    function setupAnimation (animationFrameCount, animationSpeed) {
+    /**
+     * Configures a defined sprite to have an active animation spanning given amount of frames.
+     * 
+     * @param {type} spriteWidth Width of the sprite to be animated.
+     * @param {type} animationFrameCount The number of animation frames.
+     * @param {type} animationSpeed The delay after each animation frame. If none defined, animation is played as quickly as possible.
+     */
+    function setupAnimation (spriteWidth, animationFrameCount, animationSpeed) {
         
         // Default to no animation
         if (animationFrameCount > 1) {            
@@ -53,8 +76,7 @@ define(function() {
             
                     i = ++i % this.animationFrameCount;
 
-                    // TODO: Sprite needs it's width defined.
-                    this.spriteBackground.x(i * -100);
+                    this.spriteBackground.x(i * -spriteWidth);
                     this.currentFrame = i;
                     this.lastFrameTime = timestamp;
                 }
@@ -62,10 +84,21 @@ define(function() {
         }
     }
 
+    /**
+     * Returns a previously defined sprite so it can be used.
+     * 
+     * @param {type} id Identifier of previously defined sprite.
+     * @returns {SVGElement}
+     */
     SpriteSheet.prototype.get = function(id) {
         return this.sprites[id];
     };
 
+    /**
+     * Performs an animation step by given timestamp on all sprites with configured animation.
+     * 
+     * @param {type} timestamp Current time, compared with the timestamp of last call.
+     */
     SpriteSheet.prototype.animateSprites = function(timestamp) {
         var s, sprites = this.sprites;
         

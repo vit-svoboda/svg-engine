@@ -3,8 +3,10 @@ define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.til
 
     /**
      * Engine module constructor.
+     * @module engine
+     * @exports Engine
      * 
-     * @param {HTMLElement or jQuery object} container Engine will live inside this element.
+     * @param {HTMLElement|jQuery} container Engine will live inside this element.
      * @param {number} refreshSpeed How often the screen should be updated.
      */
     function Engine(container, refreshSpeed) {
@@ -12,7 +14,7 @@ define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.til
         container = $(container);
 
         if (SVG.supported) {
-            this.refreshSpeed = refreshSpeed || 200;
+            this.refreshSpeed = refreshSpeed || 500;
 
             this.context = SVG(container[0]);
 
@@ -83,8 +85,6 @@ define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.til
                     
                     // Full update mode
                     tileData.forEach(function (tile, x) {
-
-                        // TODO: This probably should be responsibility of the client module
                         var position = new Point(data.topLeft.x + x, data.topLeft.y + y);
                         
                         this.updateTile(tile, position, tileSize);
@@ -317,7 +317,7 @@ define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.til
         }
 
         // Don't bother server on every frame render.
-        if (timestamp - this.lastUpdate > this.refreshSpeed) {
+        if (!this.lastUpdate || (timestamp - this.lastUpdate > this.refreshSpeed)) {
             this.lastUpdate = timestamp;
 
             try {
@@ -396,6 +396,11 @@ define(['jquery', 'point', 'datacache', 'camera', 'spritesheet', 'svg', 'svg.til
         return sum;
     };
 
+    /**
+     * Resizes the viewport according to given container.
+     * 
+     * @param {HTMLElement|jQuery} container Viewport container defining its size.
+     */
     Engine.prototype.resize = function (container) {
         var c = $(container),
             size = new Point(c.innerWidth(), c.innerHeight());

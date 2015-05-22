@@ -28,9 +28,15 @@ define(['jquery'], function ($) {
         }
     };
     
-    Controller.prototype.processDetailedData = function (context, tileData) {
+    /**
+     * Handles the response for a complete tile data request.
+     * Part of the engine interface.
+     * 
+     * @param {type} context Drawing context.
+     * @param {type} tileData Complete data belonging to a tile.
 
-        // TODO: Store all UI in a single overlay foreignObject?
+     */
+    Controller.prototype.processDetailedData = function (context, tileData) {
         var controller = this,
             ui = context.foreignObject(300, 300),
             dialog = $('<div class="ui dialog"></div>'),
